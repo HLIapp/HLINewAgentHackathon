@@ -70,7 +70,6 @@ export default function SettingsPage() {
       mood: formData.mood,
       energy: formData.energy,
       preferences: {
-        voiceId: formData.voiceId,
         notifications: formData.notifications,
         theme: formData.theme
       }
@@ -102,7 +101,6 @@ export default function SettingsPage() {
         symptoms: defaultData.profile.symptoms,
         mood: defaultData.profile.mood,
         energy: defaultData.profile.energy,
-        voiceId: defaultData.profile.preferences?.voiceId || 'pNInz6obpgDQGcFmaJgB',
         notifications: defaultData.profile.preferences?.notifications ?? true,
         theme: defaultData.profile.preferences?.theme || 'light'
       });
@@ -122,19 +120,19 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          Daily Log & Profile Settings
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-8 tracking-tight">
+          Daily Log & Settings
         </h1>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Daily Log</h2>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-6 tracking-tight">Your Profile</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="username" className="block text-xs font-medium text-gray-700 mb-2">
                   Name
                 </label>
                 <input
@@ -142,13 +140,13 @@ export default function SettingsPage() {
                   id="username"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your username"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  placeholder="Your name"
                 />
               </div>
 
               <div>
-                <label htmlFor="lastPeriod" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="lastPeriod" className="block text-xs font-medium text-gray-700 mb-2">
                   Last Period Date
                 </label>
                 <input
@@ -156,12 +154,12 @@ export default function SettingsPage() {
                   id="lastPeriod"
                   value={formData.lastPeriod}
                   onChange={(e) => setFormData({ ...formData, lastPeriod: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                 />
               </div>
 
               <div>
-                <label htmlFor="cycleLength" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="cycleLength" className="block text-xs font-medium text-gray-700 mb-2">
                   Cycle Length (days)
                 </label>
                 <input
@@ -171,12 +169,12 @@ export default function SettingsPage() {
                   onChange={(e) => setFormData({ ...formData, cycleLength: Number(e.target.value) })}
                   min="21"
                   max="35"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                 />
               </div>
 
               <div>
-                <label htmlFor="goal" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="goal" className="block text-xs font-medium text-gray-700 mb-2">
                   Health Goal
                 </label>
                 <input
@@ -184,22 +182,22 @@ export default function SettingsPage() {
                   id="goal"
                   value={formData.goal}
                   onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., energy management, mood tracking"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  placeholder="e.g., energy management"
                 />
               </div>
             </div>
 
             {/* Right Column */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
                   Current Mood
                 </label>
                 <select
                   value={formData.mood}
                   onChange={(e) => setFormData({ ...formData, mood: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                 >
                   {moodOptions.map(mood => (
                     <option key={mood} value={mood} className="capitalize">
@@ -210,13 +208,13 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
                   Energy Level
                 </label>
                 <select
                   value={formData.energy}
                   onChange={(e) => setFormData({ ...formData, energy: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                 >
                   {energyOptions.map(energy => (
                     <option key={energy} value={energy} className="capitalize">
@@ -226,69 +224,41 @@ export default function SettingsPage() {
                 </select>
               </div>
 
-            
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="notifications"
-                  checked={formData.notifications}
-                  onChange={(e) => setFormData({ ...formData, notifications: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="notifications" className="ml-2 block text-sm text-gray-700">
-                  Enable notifications
-                </label>
-              </div>
+              
             </div>
           </div>
 
           {/* Symptoms Section */}
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Current Symptoms (select all that apply)
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <label className="block text-xs font-medium text-gray-700 mb-3">
+              Current Symptoms
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {symptomOptions.map(symptom => (
-                <label key={symptom} className="flex items-center">
+                <label key={symptom} className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.symptoms.includes(symptom)}
                     onChange={() => handleSymptomToggle(symptom)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-gray-900 focus:ring-gray-400 border-gray-300 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700 capitalize">{symptom}</span>
+                  <span className="ml-2 text-xs text-gray-700 capitalize">{symptom}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Theme Selection */}
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Theme
-            </label>
-            <select
-              value={formData.theme}
-              onChange={(e) => setFormData({ ...formData, theme: e.target.value as 'light' | 'dark' })}
-              className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-
           {/* Action Buttons */}
-          <div className="flex gap-4 mt-8">
+          <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
             <button
               onClick={handleSave}
-              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex-1 bg-gray-900 text-white py-2.5 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm font-medium"
             >
-              Save Settings
+              Save Log
             </button>
             <button
               onClick={handleReset}
-              className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              className="flex-1 border border-gray-300 text-gray-700 py-2.5 px-4 rounded-md hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm font-medium"
             >
               Reset Data
             </button>
@@ -297,55 +267,36 @@ export default function SettingsPage() {
 
         {/* Current Data Display */}
         {userData && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Profile</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <strong>User ID:</strong> {userData.profile.id}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-4 tracking-tight">Profile Summary</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="flex gap-2">
+                <span className="text-gray-500">User ID:</span>
+                <span className="text-gray-900">{userData.profile.id}</span>
               </div>
-              <div>
-                <strong>Username:</strong> {userData.profile.username}
+              <div className="flex gap-2">
+                <span className="text-gray-500">Username:</span>
+                <span className="text-gray-900">{userData.profile.username}</span>
               </div>
-              <div>
-                <strong>Created:</strong> {new Date(userData.createdAt).toLocaleString()}
+              <div className="flex gap-2">
+                <span className="text-gray-500">Created:</span>
+                <span className="text-gray-900">{new Date(userData.createdAt).toLocaleDateString()}</span>
               </div>
-              <div>
-                <strong>Last Updated:</strong> {new Date(userData.lastUpdated).toLocaleString()}
+              <div className="flex gap-2">
+                <span className="text-gray-500">Last Updated:</span>
+                <span className="text-gray-900">{new Date(userData.lastUpdated).toLocaleDateString()}</span>
               </div>
-              <div>
-                <strong>Cycle History Entries:</strong> {userData.cycleHistory.length}
+              <div className="flex gap-2">
+                <span className="text-gray-500">Cycle History:</span>
+                <span className="text-gray-900">{userData.cycleHistory.length} entries</span>
               </div>
-              <div>
-                <strong>Current Symptoms:</strong> {userData.profile.symptoms.join(', ') || 'None'}
+              <div className="flex gap-2">
+                <span className="text-gray-500">Current Symptoms:</span>
+                <span className="text-gray-900">{userData.profile.symptoms.join(', ') || 'None'}</span>
               </div>
             </div>
           </div>
         )}
-
-        {/* Navigation */}
-        <div className="mt-8 bg-blue-50 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-blue-900 mb-2">Quick Navigation</h3>
-          <div className="flex flex-wrap gap-2">
-            <a
-              href="/test-agent"
-              className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
-            >
-              Test AI Agent
-            </a>
-            <a
-              href="/test-cycle"
-              className="bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700"
-            >
-              Test Cycle Tracker
-            </a>
-            <a
-              href="/"
-              className="bg-gray-600 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-700"
-            >
-              Home
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   );

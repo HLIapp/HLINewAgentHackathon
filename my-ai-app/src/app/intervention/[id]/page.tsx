@@ -235,19 +235,19 @@ export default function InterventionDetailPage() {
 
   const getPhaseColor = (phase: string) => {
     const colors = {
-      menstrual: 'bg-red-100 text-red-800 border-red-300',
-      follicular: 'bg-green-100 text-green-800 border-green-300',
-      ovulatory: 'bg-blue-100 text-blue-800 border-blue-300',
-      luteal: 'bg-purple-100 text-purple-800 border-purple-300',
+      menstrual: 'bg-red-50 text-red-700 border-red-200',
+      follicular: 'bg-green-50 text-green-700 border-green-200',
+      ovulatory: 'bg-blue-50 text-blue-700 border-blue-200',
+      luteal: 'bg-purple-50 text-purple-700 border-purple-200',
     };
-    return colors[phase as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-300';
+    return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-pulse text-xl text-gray-600">Loading intervention...</div>
+          <div className="text-sm text-gray-500">Loading...</div>
         </div>
       </div>
     );
@@ -257,11 +257,11 @@ export default function InterventionDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Intervention Not Found</h2>
-          <p className="text-gray-600 mb-6">We couldn't find this intervention. Please try again.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">Practice Not Found</h2>
+          <p className="text-sm text-gray-600 mb-6">We couldn't find this practice.</p>
           <button
             onClick={() => router.push('/')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+            className="text-sm font-medium text-gray-900 border border-gray-300 px-4 py-2 rounded-md hover:border-gray-400 transition-colors"
           >
             Back to Home
           </button>
@@ -272,69 +272,60 @@ export default function InterventionDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back Button */}
         <button
           onClick={() => router.push('/')}
-          className="mb-6 text-gray-600 hover:text-gray-900 flex items-center gap-2"
+          className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
         >
-          ← Back to Dashboard
+          ← Back
         </button>
 
         {/* Intervention Header */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-start gap-4">
-              <div className="text-6xl">{intervention.emoji}</div>
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                    {intervention.benefit}
+        <div className="bg-white border border-gray-200 rounded-lg p-8 mb-6">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="text-4xl">{intervention.emoji}</div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                {intervention.phase_tags.map((phase) => (
+                  <span
+                    key={phase}
+                    className={`text-xs font-medium px-2 py-0.5 rounded border capitalize ${getPhaseColor(phase)}`}
+                  >
+                    {phase}
                   </span>
-                  {intervention.phase_tags.map((phase) => (
-                    <span
-                      key={phase}
-                      className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${getPhaseColor(phase)}`}
-                    >
-                      {phase}
-                    </span>
-                  ))}
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {intervention.title}
-                </h1>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    ⏱️ {intervention.duration_minutes} minutes
-                  </span>
-                  <span className="flex items-center gap-1">
-                    📍 {intervention.location}
-                  </span>
-                  <span className="flex items-center gap-1 capitalize">
-                    🏷️ {intervention.category}
-                  </span>
-                </div>
+                ))}
+              </div>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">
+                {intervention.title}
+              </h1>
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                <span>{intervention.duration_minutes} min</span>
+                <span>·</span>
+                <span className="capitalize">{intervention.category}</span>
+                <span>·</span>
+                <span>{intervention.location}</span>
               </div>
             </div>
           </div>
 
           {/* Description */}
-          <p className="text-gray-800 leading-relaxed mb-4 font-semibold">
+          <p className="text-sm text-gray-900 leading-relaxed mb-3 font-medium">
             {intervention.description}
           </p>
 
           {/* Personalized Introduction (if generated) */}
           {synthesizedContent.get('text')?.data?.introduction && (
-            <p className="text-gray-700 leading-relaxed mb-6">
+            <p className="text-sm text-gray-600 leading-relaxed mb-4">
               {synthesizedContent.get('text').data.introduction}
             </p>
           )}
 
           {/* Research Citation */}
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-xs text-gray-500">
             <a 
               href="#research" 
-              className="text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               {intervention.research}
             </a>
@@ -342,91 +333,91 @@ export default function InterventionDetailPage() {
         </div>
 
         {/* Mode Selection */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Choose Your Guide Format(s)</h2>
-          <p className="text-sm text-gray-600 mb-4">Select one or more formats - you can use multiple at once!</p>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-2 tracking-tight">Choose Your Guide Format</h2>
+          <p className="text-xs text-gray-600 mb-5">Select one or multiple formats</p>
           
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
             <button
               onClick={() => handleModeToggle('text')}
-              className={`p-4 rounded-lg border-2 transition-all relative ${
+              className={`p-4 rounded-lg border transition-all relative ${
                 selectedModes.has('text')
-                  ? 'border-blue-600 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-gray-900 bg-gray-50'
+                  : 'border-gray-200 hover:border-gray-400'
               }`}
             >
               {selectedModes.has('text') && (
-                <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                <div className="absolute top-2 right-2 w-5 h-5 bg-gray-900 text-white rounded flex items-center justify-center text-xs">
                   ✓
                 </div>
               )}
-              <div className="text-3xl mb-2">📝</div>
-              <div className="font-semibold text-gray-900">Text</div>
-              <div className="text-xs text-gray-600 mt-1">Step-by-step guide</div>
+              <div className="text-2xl mb-2">📝</div>
+              <div className="text-sm font-medium text-gray-900">Text</div>
+              <div className="text-xs text-gray-500 mt-0.5">Step-by-step</div>
             </button>
 
             <button
               onClick={() => handleModeToggle('audio')}
-              className={`p-4 rounded-lg border-2 transition-all relative ${
+              className={`p-4 rounded-lg border transition-all relative ${
                 selectedModes.has('audio')
-                  ? 'border-blue-600 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-gray-900 bg-gray-50'
+                  : 'border-gray-200 hover:border-gray-400'
               }`}
             >
               {selectedModes.has('audio') && (
-                <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                <div className="absolute top-2 right-2 w-5 h-5 bg-gray-900 text-white rounded flex items-center justify-center text-xs">
                   ✓
                 </div>
               )}
-              <div className="text-3xl mb-2">🔊</div>
-              <div className="font-semibold text-gray-900">Audio</div>
-              <div className="text-xs text-gray-600 mt-1">Guided narration</div>
+              <div className="text-2xl mb-2">🔊</div>
+              <div className="text-sm font-medium text-gray-900">Audio</div>
+              <div className="text-xs text-gray-500 mt-0.5">Narration</div>
             </button>
 
             <button
               onClick={() => handleModeToggle('visual')}
-              className={`p-4 rounded-lg border-2 transition-all relative ${
+              className={`p-4 rounded-lg border transition-all relative ${
                 selectedModes.has('visual')
-                  ? 'border-blue-600 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-gray-900 bg-gray-50'
+                  : 'border-gray-200 hover:border-gray-400'
               }`}
             >
               {selectedModes.has('visual') && (
-                <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                <div className="absolute top-2 right-2 w-5 h-5 bg-gray-900 text-white rounded flex items-center justify-center text-xs">
                   ✓
                 </div>
               )}
-              <div className="text-3xl mb-2">🎨</div>
-              <div className="font-semibold text-gray-900">Visual</div>
-              <div className="text-xs text-gray-600 mt-1">Illustrated steps</div>
+              <div className="text-2xl mb-2">🎨</div>
+              <div className="text-sm font-medium text-gray-900">Visual</div>
+              <div className="text-xs text-gray-500 mt-0.5">Illustrated</div>
             </button>
           </div>
 
           {/* Content Display - Order: Audio → Visual → Text */}
-          <div className="border-t pt-6 space-y-6">
+          <div className="border-t border-gray-200 pt-6 space-y-5">
             {selectedModes.size === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                Select at least one format to view the practice guide
+              <div className="text-center py-16 text-xs text-gray-500">
+                Select at least one format to view the guide
               </div>
             )}
 
             {/* Audio Content (First) */}
             {selectedModes.has('audio') && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-2 border-blue-200">
+              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🔊</span>
-                  <h3 className="text-lg font-semibold text-gray-900">Audio Guide</h3>
+                  <span className="text-xl">🔊</span>
+                  <h3 className="text-sm font-semibold text-gray-900">Audio Guide</h3>
                 </div>
 
                 {synthesizedContent.get('audio')?.status === 'loading' && (
                   <div className="text-center py-12">
-                    <div className="animate-pulse text-6xl mb-4">🎧</div>
-                    <p className="text-gray-600">Generating audio guide...</p>
+                    <div className="text-3xl mb-3">🎧</div>
+                    <p className="text-xs text-gray-600">Generating audio...</p>
                   </div>
                 )}
 
                 {synthesizedContent.get('audio')?.status === 'ready' && synthesizedContent.get('audio')?.data?.audio_base64 && (
-                  <div className="bg-white border border-blue-300 rounded-lg p-4">
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
                     <audio
                       controls
                       className="w-full"
@@ -434,24 +425,24 @@ export default function InterventionDetailPage() {
                     >
                       Your browser does not support the audio element.
                     </audio>
-                    <p className="text-sm text-blue-800 mt-3 text-center">
-                      Duration: ~{Math.floor(synthesizedContent.get('audio').data.estimated_time / 60)} minutes
+                    <p className="text-xs text-gray-600 mt-3 text-center">
+                      ~{Math.floor(synthesizedContent.get('audio').data.estimated_time / 60)} min
                     </p>
                   </div>
                 )}
 
                 {synthesizedContent.get('audio')?.status === 'ready' && !synthesizedContent.get('audio')?.data?.audio_base64 && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-yellow-800 text-sm">
-                      Audio generation requires ElevenLabs API key. Please add it to your .env.local file.
+                    <p className="text-xs text-yellow-800">
+                      Audio generation requires ElevenLabs API key
                     </p>
                   </div>
                 )}
 
                 {synthesizedContent.get('audio')?.status === 'error' && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-red-800 text-sm">
-                      Error generating audio guide. Please try again.
+                    <p className="text-xs text-red-800">
+                      Error generating audio guide
                     </p>
                   </div>
                 )}
@@ -460,31 +451,31 @@ export default function InterventionDetailPage() {
 
             {/* Visual Content (Second) */}
             {selectedModes.has('visual') && (
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border-2 border-purple-200">
+              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🎨</span>
-                  <h3 className="text-lg font-semibold text-gray-900">Visual Guide</h3>
+                  <span className="text-xl">🎨</span>
+                  <h3 className="text-sm font-semibold text-gray-900">Visual Guide</h3>
                 </div>
 
                 {synthesizedContent.get('visual')?.status === 'loading' && (
                   <div className="text-center py-8">
-                    <div className="animate-pulse text-5xl mb-3">🖼️</div>
-                    <p className="text-gray-600 text-sm">Generating visual guide...</p>
+                    <div className="text-3xl mb-3">🖼️</div>
+                    <p className="text-xs text-gray-600">Generating visual...</p>
                   </div>
                 )}
 
                 {(!synthesizedContent.has('visual') || synthesizedContent.get('visual')?.status === 'ready') && (
-                  <div className="bg-white border border-purple-300 rounded-lg p-4">
-                    <p className="text-purple-800 text-sm text-center">
-                      🎨 Visual illustrated guides coming soon! We're working on generating beautiful step-by-step illustrations for you.
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-xs text-gray-600 text-center">
+                      Visual guides coming soon
                     </p>
                   </div>
                 )}
 
                 {synthesizedContent.get('visual')?.status === 'error' && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-red-800 text-sm">
-                      Error generating visual guide. Please try again.
+                    <p className="text-xs text-red-800">
+                      Error generating visual guide
                     </p>
                   </div>
                 )}
@@ -493,16 +484,16 @@ export default function InterventionDetailPage() {
 
             {/* Text Content (Third) */}
             {selectedModes.has('text') && intervention && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-2 border-green-200">
+              <div className="border border-gray-200 rounded-lg p-6 bg-white">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">📝</span>
-                  <h3 className="text-lg font-semibold text-gray-900">Text Guide</h3>
+                  <span className="text-xl">📝</span>
+                  <h3 className="text-sm font-semibold text-gray-900">Text Guide</h3>
                 </div>
 
                 {synthesizedContent.get('text')?.status === 'loading' && (
                   <div className="text-center py-8">
-                    <div className="animate-pulse text-5xl mb-3">✍️</div>
-                    <p className="text-gray-600 text-sm">Generating personalized guide...</p>
+                    <div className="text-3xl mb-3">✍️</div>
+                    <p className="text-xs text-gray-600">Generating guide...</p>
                   </div>
                 )}
 
@@ -511,37 +502,37 @@ export default function InterventionDetailPage() {
 
                     {/* Equipment */}
                     {intervention.equipment && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-yellow-900 mb-2 text-sm">📦 Equipment Needed</h4>
-                        <p className="text-yellow-800 text-sm">{intervention.equipment}</p>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 className="font-medium text-gray-900 mb-1 text-xs">Equipment Needed</h4>
+                        <p className="text-gray-700 text-xs">{intervention.equipment}</p>
                       </div>
                     )}
 
                     {/* Steps */}
                     <div className="space-y-3">
                       {synthesizedContent.get('text').data.steps.map((step: any) => (
-                        <div key={step.step_number} className="bg-white rounded-lg p-4 border border-green-200">
-                          <div className="flex gap-4 items-start mb-2">
-                            <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                        <div key={step.step_number} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="flex gap-3 items-start mb-2">
+                            <div className="flex-shrink-0 w-6 h-6 bg-gray-900 text-white rounded flex items-center justify-center font-medium text-xs">
                               {step.step_number}
                             </div>
                             <div className="flex-1">
-                              <p className="text-gray-900 font-medium">{step.instruction}</p>
+                              <p className="text-gray-900 text-sm font-medium">{step.instruction}</p>
                               {step.duration_seconds && (
-                                <p className="text-xs text-gray-500 mt-1">⏱️ {step.duration_seconds} seconds</p>
+                                <p className="text-xs text-gray-500 mt-1">{step.duration_seconds}s</p>
                               )}
                             </div>
                           </div>
                           
                           {step.breathing_cue && (
-                            <div className="ml-12 mt-2 text-sm text-blue-700 bg-blue-50 rounded px-3 py-2">
-                              🫁 {step.breathing_cue}
+                            <div className="ml-9 mt-2 text-xs text-gray-700 bg-white border border-gray-200 rounded px-3 py-2">
+                              {step.breathing_cue}
                             </div>
                           )}
                           
                           {step.physiological_explanation && (
-                            <div className="ml-12 mt-2 text-xs text-gray-600 italic">
-                              💡 {step.physiological_explanation}
+                            <div className="ml-9 mt-2 text-xs text-gray-600">
+                              {step.physiological_explanation}
                             </div>
                           )}
                         </div>
@@ -550,9 +541,9 @@ export default function InterventionDetailPage() {
 
                     {/* Modification */}
                     {synthesizedContent.get('text').data.modification && (
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-purple-900 mb-2 text-sm">💡 Modification</h4>
-                        <p className="text-purple-800 text-sm">{synthesizedContent.get('text').data.modification}</p>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 className="font-medium text-gray-900 mb-1 text-xs">Modification</h4>
+                        <p className="text-gray-700 text-xs">{synthesizedContent.get('text').data.modification}</p>
                       </div>
                     )}
                   </div>
@@ -560,14 +551,14 @@ export default function InterventionDetailPage() {
 
                 {synthesizedContent.get('text')?.status === 'error' && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-red-800 text-sm">Error generating text guide. Please try again.</p>
+                    <p className="text-xs text-red-800 mb-2">Error generating text guide</p>
                     <button
                       onClick={() => {
                         if (intervention) {
                           loadTextGuide(intervention.title, intervention);
                         }
                       }}
-                      className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+                      className="text-xs font-medium text-gray-900 border border-gray-300 px-3 py-1.5 rounded-md hover:border-gray-400 transition-colors"
                     >
                       Retry
                     </button>
@@ -583,45 +574,45 @@ export default function InterventionDetailPage() {
           <button
             onClick={handleDoneClick}
             disabled={isCompleted}
-            className={`py-3 px-12 rounded-md transition-colors font-medium text-lg shadow-lg ${
+            className={`py-2.5 px-8 rounded-md transition-colors text-sm font-medium ${
               isCompleted
-                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-700'
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300'
+                : 'bg-gray-900 text-white hover:bg-gray-800 border border-gray-900'
             }`}
           >
-            {isCompleted ? '✅ Completed Today' : 'Done'}
+            {isCompleted ? 'Completed Today' : 'Mark as Done'}
           </button>
         </div>
 
         {/* Reflection Modal */}
         {showReflectionModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white border border-gray-300 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">How did it go?</h2>
-                <p className="text-gray-600 mb-6">Share your experience to track your progress</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1 tracking-tight">How did it go?</h2>
+                <p className="text-xs text-gray-600 mb-6">Share your experience to track progress</p>
 
                 {/* Rating Scale */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">How helpful was this practice?</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">How helpful was this practice?</h3>
                   <div className="grid grid-cols-5 gap-2">
                     {[
                       { value: 1, emoji: '😔', label: 'Not helpful' },
-                      { value: 2, emoji: '😐', label: 'Slightly helpful' },
+                      { value: 2, emoji: '😐', label: 'Slightly' },
                       { value: 3, emoji: '🙂', label: 'Helpful' },
-                      { value: 4, emoji: '😊', label: 'Very helpful' },
-                      { value: 5, emoji: '🤩', label: 'Extremely helpful' },
+                      { value: 4, emoji: '😊', label: 'Very' },
+                      { value: 5, emoji: '🤩', label: 'Extremely' },
                     ].map((option) => (
                       <button
                         key={option.value}
                         onClick={() => setRating(option.value)}
-                        className={`p-3 rounded-lg border-2 transition-all ${
+                        className={`p-3 rounded-lg border transition-all ${
                           rating === option.value
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-gray-900 bg-gray-50'
+                            : 'border-gray-200 hover:border-gray-400'
                         }`}
                       >
-                        <div className="text-3xl mb-1">{option.emoji}</div>
+                        <div className="text-2xl mb-1">{option.emoji}</div>
                         <div className="text-xs text-gray-600">{option.label}</div>
                       </button>
                     ))}
@@ -630,36 +621,36 @@ export default function InterventionDetailPage() {
 
                 {/* Completed Full Practice */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Did you complete the full practice?</h3>
-                  <div className="flex gap-4">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Did you complete the full practice?</h3>
+                  <div className="flex gap-3">
                     <button
                       onClick={() => setCompletedFull(true)}
-                      className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      className={`flex-1 p-3 rounded-lg border transition-all ${
                         completedFull
-                          ? 'border-green-600 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-gray-900 bg-gray-50'
+                          : 'border-gray-200 hover:border-gray-400'
                       }`}
                     >
-                      <div className="text-2xl mb-1">✅</div>
-                      <div className="font-medium">Yes</div>
+                      <div className="text-xl mb-1">✅</div>
+                      <div className="text-xs font-medium">Yes</div>
                     </button>
                     <button
                       onClick={() => setCompletedFull(false)}
-                      className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      className={`flex-1 p-3 rounded-lg border transition-all ${
                         !completedFull
-                          ? 'border-orange-600 bg-orange-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-gray-900 bg-gray-50'
+                          : 'border-gray-200 hover:border-gray-400'
                       }`}
                     >
-                      <div className="text-2xl mb-1">⏸️</div>
-                      <div className="font-medium">Partially</div>
+                      <div className="text-xl mb-1">⏸️</div>
+                      <div className="text-xs font-medium">Partially</div>
                     </button>
                   </div>
                 </div>
 
                 {/* Changes Noticed */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">What changed? (Select all that apply)</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">What changed? (Select all that apply)</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       'pain decreased',
@@ -674,10 +665,10 @@ export default function InterventionDetailPage() {
                       <button
                         key={tag}
                         onClick={() => toggleChangeTag(tag)}
-                        className={`p-2 rounded-lg border-2 transition-all text-sm ${
+                        className={`p-2 rounded-lg border transition-all text-xs ${
                           changesNoticed.includes(tag)
-                            ? 'border-blue-600 bg-blue-50 text-blue-900'
-                            : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                            ? 'border-gray-900 bg-gray-50 text-gray-900'
+                            : 'border-gray-200 hover:border-gray-400 text-gray-700'
                         }`}
                       >
                         {changesNoticed.includes(tag) && '✓ '}
@@ -689,12 +680,12 @@ export default function InterventionDetailPage() {
 
                 {/* Optional Notes */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Additional notes (optional)</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Additional notes (optional)</h3>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any other observations or feelings..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Any other observations..."
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                     rows={3}
                   />
                 </div>
@@ -703,15 +694,15 @@ export default function InterventionDetailPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={handleSkipReflection}
-                    className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+                    className="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:border-gray-400 transition-colors text-sm font-medium"
                   >
                     Skip
                   </button>
                   <button
                     onClick={handleSubmitReflection}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                    className="flex-1 bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors text-sm font-medium"
                   >
-                    Submit Reflection
+                    Submit
                   </button>
                 </div>
               </div>

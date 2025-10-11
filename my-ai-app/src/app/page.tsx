@@ -120,12 +120,12 @@ export default function Home() {
 
   const getPhaseColor = (phase: string) => {
     const colors = {
-      menstrual: 'bg-red-100 text-red-800 border-red-300',
-      follicular: 'bg-green-100 text-green-800 border-green-300',
-      ovulatory: 'bg-blue-100 text-blue-800 border-blue-300',
-      luteal: 'bg-purple-100 text-purple-800 border-purple-300',
+      menstrual: 'bg-red-50 text-red-700 border-red-200',
+      follicular: 'bg-green-50 text-green-700 border-green-200',
+      ovulatory: 'bg-blue-50 text-blue-700 border-blue-200',
+      luteal: 'bg-purple-50 text-purple-700 border-purple-200',
     };
-    return colors[phase as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-300';
+    return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
   const getPhaseEmoji = (phase: string) => {
@@ -140,28 +140,37 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Phase Banner */}
         {currentPhase && (
-          <div className={`rounded-lg border-2 p-6 mb-8 ${getPhaseColor(currentPhase)}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <span className="text-4xl">{getPhaseEmoji(currentPhase)}</span>
-                <div>
-                  <h2 className="text-2xl font-bold capitalize">
-                    Today: {currentPhase} Phase
+          <div className={`rounded-lg border p-8 mb-8 ${getPhaseColor(currentPhase)}`}>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">{getPhaseEmoji(currentPhase)}</span>
+                  <h2 className="text-xl font-semibold capitalize tracking-tight">
+                    {currentPhase} Phase - Day {dayOfCycle} of {userProfile?.cycleLength}
                   </h2>
-                  <p className="text-sm mt-1">
-                    Day {dayOfCycle} of your cycle
-                    {userProfile && ` · ${userProfile.username}`}
-                  </p>
                 </div>
+                
+                <p className="text-sm font-medium mb-1">
+                Ground & Recharge
+                </p>
+                {userProfile && (
+                  <><p className="text-xs text-gray-700">
+
+                    Progesterone rises → energy dips, stress sensitivity grows.
+
+                  </p><p className="text-xs text-gray-700">
+                      Focus: calm movement, anti-inflammatory meals, rest & reset.
+                    </p></>
+                )}
               </div>
               <a
                 href="/settings"
-                className="text-sm underline hover:no-underline"
+                className="text-xs font-medium hover:opacity-70 transition-opacity"
               >
-                Update Profile
+                Update Log
               </a>
             </div>
           </div>
@@ -170,11 +179,11 @@ export default function Home() {
         {/* Welcome Message */}
         {!userProfile && (
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Welcome to Your Wellness Journey
+            <h1 className="text-3xl font-semibold text-gray-900 mb-3 tracking-tight">
+              Welcome to Hormone Harmony Coach
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Personalized practices for your menstrual cycle phase
+            <p className="text-sm text-gray-600 mb-8">
+              Personalized practices for your menstrual cycle
             </p>
           </div>
         )}
@@ -183,113 +192,88 @@ export default function Home() {
         {userProfile && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Recommended Practices for You
+              <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
+                Recommended for You
               </h2>
               {currentPhase && (
-                <span className="text-sm text-gray-600">
-                  Based on your {currentPhase} phase
+                <span className="text-xs text-gray-500 font-medium">
+                  {currentPhase} phase
                 </span>
               )}
             </div>
 
             {loading && (
-              <div className="text-center py-12">
-                <div className="animate-pulse text-gray-600">Loading personalized practices...</div>
+              <div className="text-center py-16">
+                <div className="text-sm text-gray-500">Loading practices...</div>
               </div>
             )}
 
             {!loading && interventions.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                <p className="text-gray-600">No interventions available. Please update your profile.</p>
+              <div className="text-center py-16 bg-white border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-600 mb-4">No practices available</p>
                 <a
                   href="/settings"
-                  className="inline-block mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="inline-block text-sm font-medium text-gray-900 hover:text-gray-700 border border-gray-300 px-4 py-2 rounded-md hover:border-gray-400 transition-colors"
                 >
                   Update Profile
                 </a>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {interventions.map((intervention) => {
                 const completedToday = isInterventionCompletedToday(intervention.id);
                 
                 return (
-                  <div
+                  <button
                     key={intervention.id}
-                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 ${
+                    onClick={() => window.location.href = `/intervention/${intervention.id}`}
+                    className={`bg-white border rounded-lg p-6 text-left transition-all ${
                       completedToday 
-                        ? 'border-green-400 bg-gradient-to-br from-white to-green-50'
-                        : 'border-transparent hover:border-blue-300'
+                        ? 'border-green-300 bg-green-50'
+                        : 'border-gray-200 hover:border-gray-400'
                     }`}
                   >
-                    <div className="p-6">
-                      {/* Header with emoji and benefit */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="text-4xl">{intervention.emoji}</div>
-                        <div className="flex flex-col gap-1 items-end">
-                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                            {intervention.benefit}
+                    {/* Header with emoji and benefit */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="text-3xl">{intervention.emoji}</div>
+                      <div className="flex flex-col gap-1.5 items-end">
+                        <span className="text-xs font-medium text-gray-600 border border-gray-200 px-2 py-0.5 rounded">
+                          {intervention.benefit}
+                        </span>
+                        {completedToday && (
+                          <span className="text-xs font-medium text-green-700 border border-green-300 bg-green-50 px-2 py-0.5 rounded">
+                            Done today
                           </span>
-                          {completedToday && (
-                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                              ✅ Done Today
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
+                    </div>
 
                     {/* Title */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3 tracking-tight">
                       {intervention.title}
                     </h3>
 
-                    {/* Category badge */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded capitalize">
-                        {intervention.category}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {intervention.duration_minutes} min · {intervention.location}
-                      </span>
+                    {/* Meta info */}
+                    <div className="flex items-center gap-3 mb-4 text-xs text-gray-500">
+                      <span>{intervention.duration_minutes} min</span>
+                      <span>·</span>
+                      <span className="capitalize">{intervention.category}</span>
                     </div>
 
                     {/* Description - Use OpenAI intro if available, otherwise static */}
-                    <p className="text-sm text-gray-700 mb-4 line-clamp-3 leading-relaxed">
+                    <p className="text-xs text-gray-600 mb-4 line-clamp-3 leading-relaxed">
                       {interventionIntros[intervention.id] || intervention.description}
                     </p>
 
-                    {/* Action button */}
-                    <button
-                      onClick={() => window.location.href = `/intervention/${intervention.id}`}
-                      className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      Start Practice →
-                    </button>
-                  </div>
-
-                  {/* Relevance indicator */}
-                  <div className="bg-gray-50 px-6 py-3 border-t">
-                    <div className="flex items-center justify-between text-xs text-gray-600">
-                      <span>Relevance</span>
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`h-2 w-2 rounded-full ${
-                              i < Math.floor((intervention.relevance_score || 1) * 5)
-                                ? 'bg-blue-600'
-                                : 'bg-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
+                    {/* Action link */}
+                    <div className="text-xs font-medium text-gray-900 flex items-center gap-1">
+                      Start practice
+                      <span className="text-gray-400">→</span>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -299,12 +283,12 @@ export default function Home() {
           <div className="flex justify-center mb-8">
             <a
               href="/settings"
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center max-w-md"
+              className="bg-white border border-gray-200 rounded-lg p-8 hover:border-gray-400 transition-all text-center max-w-md"
             >
-              <div className="text-3xl mb-3">⚙️</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Set Up Your Profile</h3>
-              <p className="text-sm text-gray-600">
-                Configure your cycle data and preferences to get started
+              <div className="text-2xl mb-3">⚙️</div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Set Up Your Profile</h3>
+              <p className="text-xs text-gray-600">
+                Configure your cycle data to get started
               </p>
             </a>
           </div>

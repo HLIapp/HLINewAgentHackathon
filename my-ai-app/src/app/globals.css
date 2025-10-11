@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
+  /* Cal AI-inspired color palette */
   --background: #ffffff;
-  --foreground: #171717;
+  --background-secondary: #F9FAFB;
+  --background-tertiary: #F3F4F6;
+  --foreground: #111827;
+  --foreground-secondary: #6B7280;
+  --foreground-tertiary: #9CA3AF;
+  
+  /* Accent colors */
+  --accent-primary: #8B5CF6;
+  --accent-secondary: #A78BFA;
+  
+  /* Border colors */
+  --border-light: #E5E7EB;
+  --border-medium: #D1D5DB;
+  
+  /* Status colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  
+  /* Phase colors (muted) */
+  --phase-menstrual: #FEE2E2;
+  --phase-follicular: #D1FAE5;
+  --phase-ovulatory: #DBEAFE;
+  --phase-luteal: #E9D5FF;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-quicksand), var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0.01em;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Remove all shadows from components */
+.shadow-sm,
+.shadow,
+.shadow-md,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+  box-shadow: none !important;
+}
+
+/* Override hover shadows */
+.hover\:shadow-lg:hover,
+.hover\:shadow-xl:hover,
+.hover\:shadow-md:hover {
+  box-shadow: none !important;
 }
