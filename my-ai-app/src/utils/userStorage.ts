@@ -158,7 +158,7 @@ export const initializeUserData = (): UserData => {
 export const mockUsers: Record<string, UserProfile> = {
   'demo-user': {
     id: "demo-user",
-    username: "Demo User",
+    username: "PJ Vang",
     lastPeriod: "2024-10-01",
     cycleLength: 28,
     goal: "energy management",
@@ -173,7 +173,7 @@ export const mockUsers: Record<string, UserProfile> = {
   },
   'test-user': {
     id: "test-user",
-    username: "Test User",
+    username: "PJ Vang",
     lastPeriod: "2024-09-28",
     cycleLength: 30,
     goal: "mood tracking",

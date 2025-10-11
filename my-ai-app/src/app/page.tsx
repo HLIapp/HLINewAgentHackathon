@@ -167,21 +167,15 @@ export default function Home() {
           </div>
         )}
 
-        {/* No Profile State */}
+        {/* Welcome Message */}
         {!userProfile && (
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Health AI Assistant
+              Welcome to Your Wellness Journey
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Personalized AI support for menstrual cycle tracking and women's health
+              Personalized practices for your menstrual cycle phase
             </p>
-            <a
-              href="/settings"
-              className="inline-block bg-purple-600 text-white px-8 py-3 rounded-md hover:bg-purple-700 transition-colors text-lg font-medium"
-            >
-              Set Up Your Profile to Get Started
-            </a>
           </div>
         )}
 
@@ -300,41 +294,21 @@ export default function Home() {
           </div>
         )}
 
-        {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <a
-            href="/test-agent"
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center"
-          >
-            <div className="text-3xl mb-3">🤖</div>
-            <h3 className="font-semibold text-gray-900 mb-2">AI Assistant</h3>
-            <p className="text-sm text-gray-600">
-              Get personalized health advice
-            </p>
-          </a>
-
-          <a
-            href="/test-cycle"
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center"
-          >
-            <div className="text-3xl mb-3">📅</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Cycle Tracker</h3>
-            <p className="text-sm text-gray-600">
-              Track your menstrual cycle
-            </p>
-          </a>
-
-          <a
-            href="/settings"
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center"
-          >
-            <div className="text-3xl mb-3">⚙️</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Settings</h3>
-            <p className="text-sm text-gray-600">
-              Update your preferences
-            </p>
-          </a>
-        </div>
+        {/* Quick Link to Settings */}
+        {!userProfile && (
+          <div className="flex justify-center mb-8">
+            <a
+              href="/settings"
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center max-w-md"
+            >
+              <div className="text-3xl mb-3">⚙️</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Set Up Your Profile</h3>
+              <p className="text-sm text-gray-600">
+                Configure your cycle data and preferences to get started
+              </p>
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

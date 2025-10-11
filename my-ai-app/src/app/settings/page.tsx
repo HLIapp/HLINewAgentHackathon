@@ -17,27 +17,26 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [formData, setFormData] = useState({
-    id: '',
-    username: '',
-    lastPeriod: '',
+    id: 'pjae',
+    username: 'PJ Vang',
+    lastPeriod: '2024-10-01',
     cycleLength: 28,
     goal: '',
     symptoms: [] as string[],
     mood: '',
     energy: '',
-    voiceId: 'pNInz6obpgDQGcFmaJgB',
     notifications: true,
     theme: 'light' as 'light' | 'dark'
   });
 
   const symptomOptions = [
-    'fatigue', 'bloating', 'headaches', 'mood swings', 
+    'bloating', 'headaches', 
     'cramps', 'breast tenderness', 'acne', 'cravings',
-    'irritability', 'anxiety', 'depression', 'insomnia'
+    'insomnia'
   ];
 
-  const moodOptions = ['low', 'moderate', 'high'];
-  const energyOptions = ['low', 'moderate', 'high'];
+  const moodOptions = ['anxious', 'happy', 'calm', 'stressed', 'mood swings'];
+  const energyOptions = ['drained', 'normal', 'energized'];
 
   useEffect(() => {
     // Initialize user data if none exists
@@ -55,7 +54,6 @@ export default function SettingsPage() {
       symptoms: userProfile.symptoms,
       mood: userProfile.mood,
       energy: userProfile.energy,
-      voiceId: userProfile.preferences?.voiceId || 'pNInz6obpgDQGcFmaJgB',
       notifications: userProfile.preferences?.notifications ?? true,
       theme: userProfile.preferences?.theme || 'light'
     });
@@ -126,18 +124,18 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          User Settings & Profile
+          Daily Log & Profile Settings
         </h1>
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Settings</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Daily Log</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column */}
             <div className="space-y-6">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
+                  Name
                 </label>
                 <input
                   type="text"
@@ -228,19 +226,7 @@ export default function SettingsPage() {
                 </select>
               </div>
 
-              <div>
-                <label htmlFor="voiceId" className="block text-sm font-medium text-gray-700 mb-2">
-                  Voice ID (ElevenLabs)
-                </label>
-                <input
-                  type="text"
-                  id="voiceId"
-                  value={formData.voiceId}
-                  onChange={(e) => setFormData({ ...formData, voiceId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Voice ID for text-to-speech"
-                />
-              </div>
+            
 
               <div className="flex items-center">
                 <input
@@ -312,7 +298,7 @@ export default function SettingsPage() {
         {/* Current Data Display */}
         {userData && (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Profile Data</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Profile</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <strong>User ID:</strong> {userData.profile.id}
