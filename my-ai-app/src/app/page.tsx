@@ -1,19 +1,30 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getUserProfile, initializeUserData, isInterventionCompletedToday } from '@/utils/userStorage';
 import { detectPhase } from '@/utils/menstrualCycle';
 import { InterventionCard } from '@/types/interventions';
 
 export default function Home() {
+  const router = useRouter();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [currentPhase, setCurrentPhase] = useState<string>('');
   const [interventions, setInterventions] = useState<InterventionCard[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [dayOfCycle, setDayOfCycle] = useState<number>(0);
   const [interventionIntros, setInterventionIntros] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // Check if user has completed onboarding
+    const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+    
+    if (!hasCompletedOnboarding) {
+      // Redirect to settings for onboarding
+      router.push('/settings');
+      return;
+    }
+
     // Initialize user data
     const userData = initializeUserData();
     const profile = getUserProfile() || userData.profile;
@@ -28,7 +39,9 @@ export default function Home() {
       // Load interventions from cache or fetch new ones
       loadInterventions(profile, cycleInfo.phase);
     }
-  }, []);
+    
+    setLoading(false);
+  }, [router]);
 
   const loadInterventions = async (profile: any, phase: string) => {
     // Check localStorage cache first
@@ -137,6 +150,15 @@ export default function Home() {
     };
     return emojis[phase as keyof typeof emojis] || '✨';
   };
+
+  // Show loading state while checking onboarding
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-sm text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

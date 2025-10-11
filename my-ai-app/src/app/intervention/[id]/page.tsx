@@ -518,9 +518,6 @@ export default function InterventionDetailPage() {
                             </div>
                             <div className="flex-1">
                               <p className="text-gray-900 text-sm font-medium">{step.instruction}</p>
-                              {step.duration_seconds && (
-                                <p className="text-xs text-gray-500 mt-1">{step.duration_seconds}s</p>
-                              )}
                             </div>
                           </div>
                           
@@ -530,9 +527,9 @@ export default function InterventionDetailPage() {
                             </div>
                           )}
                           
-                          {step.physiological_explanation && (
-                            <div className="ml-9 mt-2 text-xs text-gray-600">
-                              {step.physiological_explanation}
+                          {step.duration_seconds && (
+                            <div className="ml-9 mt-2 text-xs text-gray-500">
+                              {step.duration_seconds}s
                             </div>
                           )}
                         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   getUserProfile, 
   saveUserProfile, 
@@ -14,12 +15,14 @@ import {
 } from '@/utils/userStorage';
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [isFirstTime, setIsFirstTime] = useState(false);
   const [formData, setFormData] = useState({
     id: 'pjae',
-    username: 'PJ Vang',
-    lastPeriod: '2024-10-01',
+    username: '',
+    lastPeriod: '',
     cycleLength: 28,
     goal: '',
     symptoms: [] as string[],
@@ -39,24 +42,31 @@ export default function SettingsPage() {
   const energyOptions = ['drained', 'normal', 'energized'];
 
   useEffect(() => {
-    // Initialize user data if none exists
-    const data = initializeUserData();
-    const userProfile = getUserProfile() || data.profile;
+    // Check if this is the first time (onboarding)
+    const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+    setIsFirstTime(!hasCompletedOnboarding);
     
-    setProfile(userProfile);
-    setUserData(data);
-    setFormData({
-      id: userProfile.id,
-      username: userProfile.username,
-      lastPeriod: userProfile.lastPeriod,
-      cycleLength: userProfile.cycleLength,
-      goal: userProfile.goal,
-      symptoms: userProfile.symptoms,
-      mood: userProfile.mood,
-      energy: userProfile.energy,
-      notifications: userProfile.preferences?.notifications ?? true,
-      theme: userProfile.preferences?.theme || 'light'
-    });
+    // Only load existing data if user has completed onboarding
+    if (hasCompletedOnboarding) {
+      const data = initializeUserData();
+      const userProfile = getUserProfile() || data.profile;
+      
+      setProfile(userProfile);
+      setUserData(data);
+      setFormData({
+        id: userProfile.id,
+        username: userProfile.username,
+        lastPeriod: userProfile.lastPeriod,
+        cycleLength: userProfile.cycleLength,
+        goal: userProfile.goal,
+        symptoms: userProfile.symptoms,
+        mood: userProfile.mood,
+        energy: userProfile.energy,
+        notifications: userProfile.preferences?.notifications ?? true,
+        theme: userProfile.preferences?.theme || 'light'
+      });
+    }
+    // If first time, form data already has empty defaults from useState
   }, []);
 
   const handleSave = () => {
@@ -86,7 +96,15 @@ export default function SettingsPage() {
     setProfile(updatedProfile);
     setUserData(updatedUserData);
     
-    alert('Settings saved successfully!');
+    // Mark onboarding as completed
+    localStorage.setItem('hasCompletedOnboarding', 'true');
+    
+    // If this is first time, redirect to home
+    if (isFirstTime) {
+      router.push('/');
+    } else {
+      alert('Settings saved successfully!');
+    }
   };
 
   const handleReset = () => {
@@ -121,12 +139,26 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-8 tracking-tight">
-          Daily Log & Settings
-        </h1>
+        {isFirstTime && (
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2 tracking-tight">
+              Welcome to Hormone Harmony Coach
+            </h1>
+            <p className="text-sm text-gray-600">
+              Let's get started by setting up your daily log
+            </p>
+          </div>
+        )}
+        {!isFirstTime && (
+          <h1 className="text-2xl font-semibold text-gray-900 mb-8 tracking-tight">
+            Daily Log & Settings
+          </h1>
+        )}
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-6 tracking-tight">Your Profile</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-6 tracking-tight">
+            {isFirstTime ? 'Daily Log' : 'Your Profile'}
+          </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column */}
@@ -199,6 +231,7 @@ export default function SettingsPage() {
                   onChange={(e) => setFormData({ ...formData, mood: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                 >
+                  <option value="">Select mood</option>
                   {moodOptions.map(mood => (
                     <option key={mood} value={mood} className="capitalize">
                       {mood}
@@ -216,6 +249,7 @@ export default function SettingsPage() {
                   onChange={(e) => setFormData({ ...formData, energy: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                 >
+                  <option value="">Select energy level</option>
                   {energyOptions.map(energy => (
                     <option key={energy} value={energy} className="capitalize">
                       {energy}
@@ -254,14 +288,16 @@ export default function SettingsPage() {
               onClick={handleSave}
               className="flex-1 bg-gray-900 text-white py-2.5 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm font-medium"
             >
-              Save Log
+              {isFirstTime ? 'Continue to Recommendations' : 'Save Log'}
             </button>
-            <button
-              onClick={handleReset}
-              className="flex-1 border border-gray-300 text-gray-700 py-2.5 px-4 rounded-md hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm font-medium"
-            >
-              Reset Data
-            </button>
+            {!isFirstTime && (
+              <button
+                onClick={handleReset}
+                className="flex-1 border border-gray-300 text-gray-700 py-2.5 px-4 rounded-md hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm font-medium"
+              >
+                Reset Data
+              </button>
+            )}
           </div>
         </div>
 
