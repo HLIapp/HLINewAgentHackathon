@@ -30,7 +30,7 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Slowly rise when ready'
       ],
       modification: 'Place pillow under forehead if uncomfortable',
-      research: 'Gentle yoga poses increase pelvic blood flow and reduce cramping (Rakhshaee, 2011)'
+      research: 'Rakhshaee, 2011'
     },
     {
       phase_tags: ['menstrual', 'luteal'],
@@ -48,7 +48,7 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Hold empty lungs for 4 counts',
         'Repeat for 3 minutes'
       ],
-      research: 'Controlled breathing activates parasympathetic response, reducing cortisol (Joshi & Telles, 2009)'
+      research: 'Joshi & Telles, 2009'
     },
     {
       phase_tags: ['menstrual'],

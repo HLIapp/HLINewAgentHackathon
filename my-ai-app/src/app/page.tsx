@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getUserProfile, initializeUserData } from '@/utils/userStorage';
+import { getUserProfile, initializeUserData, isInterventionCompletedToday } from '@/utils/userStorage';
 import { detectPhase } from '@/utils/menstrualCycle';
 import { InterventionCard } from '@/types/interventions';
 
@@ -11,6 +11,7 @@ export default function Home() {
   const [interventions, setInterventions] = useState<InterventionCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [dayOfCycle, setDayOfCycle] = useState<number>(0);
+  const [interventionIntros, setInterventionIntros] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Initialize user data
@@ -83,12 +84,38 @@ export default function Home() {
           interventions: data.interventions,
           timestamp: new Date().toISOString(),
         }));
+        
+        // Load introduction text for each intervention
+        loadInterventionIntros(data.interventions);
       }
     } catch (error) {
       console.error('Failed to load interventions:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadInterventionIntros = async (interventionList: InterventionCard[]) => {
+    const intros: Record<string, string> = {};
+    
+    for (const intervention of interventionList) {
+      // Check cache first
+      const cacheKey = `text_guide_${intervention.title}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        try {
+          const parsedCache = JSON.parse(cached);
+          if (parsedCache.data?.introduction) {
+            intros[intervention.id] = parsedCache.data.introduction;
+          }
+        } catch (error) {
+          console.error('Failed to load cached intro:', error);
+        }
+      }
+    }
+    
+    setInterventionIntros(intros);
   };
 
   const getPhaseColor = (phase: string) => {
@@ -191,19 +218,33 @@ export default function Home() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {interventions.map((intervention) => (
-                <div
-                  key={intervention.id}
-                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-300"
-                >
-                  <div className="p-6">
-                    {/* Header with emoji and benefit */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="text-4xl">{intervention.emoji}</div>
-                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                        {intervention.benefit}
-                      </span>
-                    </div>
+              {interventions.map((intervention) => {
+                const completedToday = isInterventionCompletedToday(intervention.id);
+                
+                return (
+                  <div
+                    key={intervention.id}
+                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 ${
+                      completedToday 
+                        ? 'border-green-400 bg-gradient-to-br from-white to-green-50'
+                        : 'border-transparent hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="p-6">
+                      {/* Header with emoji and benefit */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="text-4xl">{intervention.emoji}</div>
+                        <div className="flex flex-col gap-1 items-end">
+                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                            {intervention.benefit}
+                          </span>
+                          {completedToday && (
+                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                              ✅ Done Today
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
                     {/* Title */}
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -220,9 +261,9 @@ export default function Home() {
                       </span>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                      {intervention.description}
+                    {/* Description - Use OpenAI intro if available, otherwise static */}
+                    <p className="text-sm text-gray-700 mb-4 line-clamp-3 leading-relaxed">
+                      {interventionIntros[intervention.id] || intervention.description}
                     </p>
 
                     {/* Action button */}
@@ -253,7 +294,8 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
         )}

@@ -191,3 +191,42 @@ export const mockUsers: Record<string, UserProfile> = {
 export const getMockUser = (username: string): UserProfile | null => {
   return mockUsers[username.toLowerCase().replace(/\s+/g, '-')] || null;
 };
+
+// Completion tracking functions
+export interface CompletedIntervention {
+  intervention_id: string;
+  intervention_title: string;
+  completed_at: string;
+  rating?: number; // 1-5
+  completed_full_practice: boolean;
+  changes_noticed?: string[];
+  notes?: string;
+}
+
+export const getCompletedInterventions = (): CompletedIntervention[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('completedInterventions');
+  return stored ? JSON.parse(stored) : [];
+};
+
+export const addCompletedIntervention = (completion: CompletedIntervention): void => {
+  if (typeof window === 'undefined') return;
+  const completions = getCompletedInterventions();
+  completions.push(completion);
+  localStorage.setItem('completedInterventions', JSON.stringify(completions));
+};
+
+export const isInterventionCompletedToday = (interventionId: string): boolean => {
+  const completions = getCompletedInterventions();
+  const today = new Date().toDateString();
+  
+  return completions.some(c => {
+    const completionDate = new Date(c.completed_at).toDateString();
+    return c.intervention_id === interventionId && completionDate === today;
+  });
+};
+
+export const getInterventionCompletionCount = (interventionId: string): number => {
+  const completions = getCompletedInterventions();
+  return completions.filter(c => c.intervention_id === interventionId).length;
+};

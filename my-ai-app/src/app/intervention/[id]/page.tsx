@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getInterventionByTitle, getAllStaticInterventions, StaticIntervention } from '@/data/staticInterventions';
+import { addCompletedIntervention, isInterventionCompletedToday, CompletedIntervention } from '@/utils/userStorage';
 
 type GuideMode = 'text' | 'audio' | 'visual';
 
@@ -13,6 +14,14 @@ export default function InterventionDetailPage() {
   const [selectedModes, setSelectedModes] = useState<Set<GuideMode>>(new Set(['text']));
   const [loading, setLoading] = useState(true);
   const [synthesizedContent, setSynthesizedContent] = useState<Map<GuideMode, any>>(new Map());
+  const [showReflectionModal, setShowReflectionModal] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  
+  // Reflection form state
+  const [rating, setRating] = useState<number | null>(null);
+  const [completedFull, setCompletedFull] = useState(true);
+  const [changesNoticed, setChangesNoticed] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     // Extract intervention title from ID or load from localStorage
@@ -29,6 +38,9 @@ export default function InterventionDetailPage() {
           // Get full details from static data
           const fullDetails = getInterventionByTitle(found.title);
           setIntervention(fullDetails);
+          
+          // Auto-load text guide from cache or generate it
+          loadTextGuide(found.title, fullDetails);
         }
       } catch (error) {
         console.error('Error loading intervention:', error);
@@ -45,7 +57,135 @@ export default function InterventionDetailPage() {
     }
 
     setLoading(false);
+    
+    // Check if intervention is already completed today
+    if (interventionId) {
+      const completedToday = isInterventionCompletedToday(interventionId);
+      setIsCompleted(completedToday);
+    }
   }, [params.id]);
+
+  const loadTextGuide = async (title: string, interventionDetails: any) => {
+    // Check if text guide is already cached
+    const cacheKey = `text_guide_${title}`;
+    const cached = localStorage.getItem(cacheKey);
+    
+    if (cached) {
+      try {
+        const parsedCache = JSON.parse(cached);
+        const cacheAge = Date.now() - new Date(parsedCache.timestamp).getTime();
+        
+        // Use cache if less than 24 hours old
+        if (cacheAge < 86400000) {
+          const newContent = new Map(synthesizedContent);
+          newContent.set('text', { status: 'ready', data: parsedCache.data });
+          setSynthesizedContent(newContent);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load cached text guide:', error);
+      }
+    }
+
+    // Generate new text guide
+    if (interventionDetails) {
+      const newContent = new Map(synthesizedContent);
+      newContent.set('text', { status: 'loading' });
+      setSynthesizedContent(newContent);
+      
+      try {
+        const response = await fetch('/api/synthesize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            intervention_title: title,
+            intervention_description: interventionDetails.description,
+            mode: 'text',
+            phase: interventionDetails.phase_tags[0],
+          }),
+        });
+
+        const data = await response.json();
+        const updatedContent = new Map(synthesizedContent);
+        updatedContent.set('text', { status: 'ready', data });
+        setSynthesizedContent(updatedContent);
+        
+        // Cache the generated guide
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: data,
+          timestamp: new Date().toISOString(),
+        }));
+      } catch (error) {
+        console.error('Synthesis error:', error);
+        const updatedContent = new Map(synthesizedContent);
+        updatedContent.set('text', { status: 'error', error });
+        setSynthesizedContent(updatedContent);
+      }
+    }
+  };
+
+  const handleDoneClick = () => {
+    setShowReflectionModal(true);
+  };
+
+  const handleSkipReflection = () => {
+    // Save completion without reflection
+    if (intervention && params.id) {
+      const completion: CompletedIntervention = {
+        intervention_id: params.id as string,
+        intervention_title: intervention.title,
+        completed_at: new Date().toISOString(),
+        completed_full_practice: true,
+      };
+      
+      addCompletedIntervention(completion);
+      setIsCompleted(true);
+      setShowReflectionModal(false);
+      router.push('/');
+    }
+  };
+
+  const handleSubmitReflection = async () => {
+    if (!intervention || !params.id) return;
+
+    const completion: CompletedIntervention = {
+      intervention_id: params.id as string,
+      intervention_title: intervention.title,
+      completed_at: new Date().toISOString(),
+      rating: rating || undefined,
+      completed_full_practice: completedFull,
+      changes_noticed: changesNoticed,
+      notes: notes.trim() || undefined,
+    };
+
+    // Save to localStorage
+    addCompletedIntervention(completion);
+
+    // Also send to API
+    try {
+      await fetch('/api/reflection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(completion),
+      });
+    } catch (error) {
+      console.error('Failed to save reflection to API:', error);
+    }
+
+    setIsCompleted(true);
+    setShowReflectionModal(false);
+    router.push('/');
+  };
+
+  const toggleChangeTag = (tag: string) => {
+    setChangesNoticed(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
 
   const handleModeToggle = async (mode: GuideMode) => {
     const newModes = new Set(selectedModes);
@@ -179,16 +319,26 @@ export default function InterventionDetailPage() {
           </div>
 
           {/* Description */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-blue-900 mb-2">Why This Was Recommended</h3>
-            <p className="text-blue-800">{intervention.description}</p>
-          </div>
+          <p className="text-gray-800 leading-relaxed mb-4 font-semibold">
+            {intervention.description}
+          </p>
 
-          {/* Research */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-semibold text-green-900 mb-2">Scientific Basis</h3>
-            <p className="text-green-800 text-sm">{intervention.research}</p>
-          </div>
+          {/* Personalized Introduction (if generated) */}
+          {synthesizedContent.get('text')?.data?.introduction && (
+            <p className="text-gray-700 leading-relaxed mb-6">
+              {synthesizedContent.get('text').data.introduction}
+            </p>
+          )}
+
+          {/* Research Citation */}
+          <p className="text-sm text-gray-500 mb-6">
+            <a 
+              href="#research" 
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              {intervention.research}
+            </a>
+          </p>
         </div>
 
         {/* Mode Selection */}
@@ -358,14 +508,6 @@ export default function InterventionDetailPage() {
 
                 {synthesizedContent.get('text')?.status === 'ready' && synthesizedContent.get('text')?.data && (
                   <div className="space-y-4">
-                    {/* Introduction */}
-                    {synthesizedContent.get('text').data.introduction && (
-                      <div className="bg-white border border-green-300 rounded-lg p-4">
-                        <p className="text-gray-800 leading-relaxed">
-                          {synthesizedContent.get('text').data.introduction}
-                        </p>
-                      </div>
-                    )}
 
                     {/* Equipment */}
                     {intervention.equipment && (
@@ -413,50 +555,22 @@ export default function InterventionDetailPage() {
                         <p className="text-purple-800 text-sm">{synthesizedContent.get('text').data.modification}</p>
                       </div>
                     )}
-
-                    {/* Reflection */}
-                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-indigo-900 mb-2 text-sm">🤔 After Your Practice</h4>
-                      <p className="text-indigo-800 italic text-sm">
-                        {synthesizedContent.get('text').data.reflection_question}
-                      </p>
-                    </div>
                   </div>
                 )}
 
                 {synthesizedContent.get('text')?.status === 'error' && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <p className="text-red-800 text-sm">Error generating text guide. Please try again.</p>
-                  </div>
-                )}
-
-                {/* Fallback to static instructions if not synthesized yet */}
-                {!synthesizedContent.has('text') && (
-                  <div className="space-y-3">
-                    {intervention.equipment && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-yellow-900 mb-2 text-sm">📦 Equipment Needed</h4>
-                        <p className="text-yellow-800 text-sm">{intervention.equipment}</p>
-                      </div>
-                    )}
-
-                    {intervention.instructions.map((instruction, index) => (
-                      <div key={index} className="flex gap-4 items-start bg-white rounded-lg p-3 border border-green-200">
-                        <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 pt-1">
-                          <p className="text-gray-800 text-sm">{instruction}</p>
-                        </div>
-                      </div>
-                    ))}
-
-                    {intervention.modification && (
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-purple-900 mb-2 text-sm">💡 Modification</h4>
-                        <p className="text-purple-800 text-sm">{intervention.modification}</p>
-                      </div>
-                    )}
+                    <button
+                      onClick={() => {
+                        if (intervention) {
+                          loadTextGuide(intervention.title, intervention);
+                        }
+                      }}
+                      className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
               </div>
@@ -464,22 +578,146 @@ export default function InterventionDetailPage() {
           </div>
         </div>
 
-        {/* Completion Tracking */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Mark as Complete</h2>
-          <p className="text-gray-600 mb-4">
-            Have you completed this practice? Track your progress and reflect on the experience.
-          </p>
+        {/* Completion Button */}
+        <div className="flex justify-center">
           <button
-            onClick={() => {
-              // Will implement completion tracking in next step
-              alert('Completion tracking will be implemented next!');
-            }}
-            className="w-full bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium"
+            onClick={handleDoneClick}
+            disabled={isCompleted}
+            className={`py-3 px-12 rounded-md transition-colors font-medium text-lg shadow-lg ${
+              isCompleted
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-green-600 text-white hover:bg-green-700'
+            }`}
           >
-            ✅ Mark as Done
+            {isCompleted ? '✅ Completed Today' : 'Done'}
           </button>
         </div>
+
+        {/* Reflection Modal */}
+        {showReflectionModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">How did it go?</h2>
+                <p className="text-gray-600 mb-6">Share your experience to track your progress</p>
+
+                {/* Rating Scale */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">How helpful was this practice?</h3>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { value: 1, emoji: '😔', label: 'Not helpful' },
+                      { value: 2, emoji: '😐', label: 'Slightly helpful' },
+                      { value: 3, emoji: '🙂', label: 'Helpful' },
+                      { value: 4, emoji: '😊', label: 'Very helpful' },
+                      { value: 5, emoji: '🤩', label: 'Extremely helpful' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setRating(option.value)}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          rating === option.value
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="text-3xl mb-1">{option.emoji}</div>
+                        <div className="text-xs text-gray-600">{option.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Completed Full Practice */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Did you complete the full practice?</h3>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setCompletedFull(true)}
+                      className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                        completedFull
+                          ? 'border-green-600 bg-green-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">✅</div>
+                      <div className="font-medium">Yes</div>
+                    </button>
+                    <button
+                      onClick={() => setCompletedFull(false)}
+                      className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                        !completedFull
+                          ? 'border-orange-600 bg-orange-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">⏸️</div>
+                      <div className="font-medium">Partially</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Changes Noticed */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">What changed? (Select all that apply)</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      'pain decreased',
+                      'felt calmer',
+                      'more energy',
+                      'better mood',
+                      'less bloating',
+                      'improved focus',
+                      'reduced anxiety',
+                      'physical relief'
+                    ].map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => toggleChangeTag(tag)}
+                        className={`p-2 rounded-lg border-2 transition-all text-sm ${
+                          changesNoticed.includes(tag)
+                            ? 'border-blue-600 bg-blue-50 text-blue-900'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                        }`}
+                      >
+                        {changesNoticed.includes(tag) && '✓ '}
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Optional Notes */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Additional notes (optional)</h3>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Any other observations or feelings..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSkipReflection}
+                    className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    Skip
+                  </button>
+                  <button
+                    onClick={handleSubmitReflection}
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Submit Reflection
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
