@@ -1,13 +1,16 @@
-# AI Agent API Setup
+# Health AI Assistant - Complete Setup Guide
 
-This project includes an `/api/agent` endpoint that integrates OpenAI and ElevenLabs for AI-powered conversations with optional text-to-speech functionality.
+This project includes a comprehensive health AI assistant with localStorage-based user management, OpenAI integration, ElevenLabs text-to-speech, and menstrual cycle tracking.
 
 ## Features
 
-- **OpenAI Integration**: Uses GPT-4 for generating intelligent responses
+- **OpenAI Integration**: Uses GPT-4 for personalized health responses
 - **ElevenLabs Integration**: Optional text-to-speech conversion of AI responses
-- **TypeScript Support**: Fully typed API with proper error handling
-- **Test Interface**: Built-in test page at `/test-agent`
+- **localStorage User Management**: No authentication required, perfect for hackathon MVP
+- **Menstrual Cycle Tracking**: Comprehensive cycle phase detection and tracking
+- **Personalized AI**: Responses tailored to user's symptoms, mood, and goals
+- **TypeScript Support**: Fully typed APIs with proper error handling
+- **Complete UI**: Settings, navigation, and test interfaces
 
 ## Setup Instructions
 
@@ -19,18 +22,20 @@ The required dependencies are already installed:
 
 ### 2. Environment Variables
 
-Create a `.env.local` file in the project root with the following variables:
+**Required**: Create a `.env.local` file in the project root with the following variables:
 
 ```env
-# OpenAI API Configuration
+# OpenAI API Configuration (Required for AI responses)
 OPENAI_API_KEY=your_openai_api_key_here
 
-# ElevenLabs API Configuration
+# ElevenLabs API Configuration (Optional for text-to-speech)
 ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 
-# Optional: ElevenLabs Voice ID (you can get this from their dashboard)
+# ElevenLabs Voice ID (Optional - uses default if not provided)
 ELEVENLABS_VOICE_ID=your_voice_id_here
 ```
+
+**Note**: The application will work without ElevenLabs keys, but audio generation will be disabled.
 
 ### 3. Get API Keys
 
@@ -90,9 +95,20 @@ Send a message to the AI agent and optionally generate audio.
 
 Get information about the API endpoint and its usage.
 
+## Available Pages
+
+- **`/`** - Home page with feature overview and user status
+- **`/settings`** - User profile configuration and preferences
+- **`/test-agent`** - AI agent interface with personalized responses
+- **`/test-cycle`** - Menstrual cycle tracking and phase detection
+
 ## Testing
 
-Visit `http://localhost:3000/test-agent` to test the API endpoint with a user-friendly interface.
+### Quick Start
+1. Visit `http://localhost:3001/` for the home page
+2. Go to `/settings` to set up your user profile
+3. Use `/test-agent` to chat with the personalized AI
+4. Use `/test-cycle` to track your menstrual cycle
 
 ## Error Handling
 

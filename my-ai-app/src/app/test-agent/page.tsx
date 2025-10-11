@@ -1,13 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AgentRequest, AgentResponse } from '@/types/api';
+import { getUserProfile } from '@/utils/userStorage';
 
 export default function TestAgentPage() {
   const [message, setMessage] = useState('');
   const [response, setResponse] = useState<AgentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [generateAudio, setGenerateAudio] = useState(false);
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    // Load user profile on component mount
+    const userProfile = getUserProfile();
+    if (userProfile) {
+      setUsername(userProfile.username);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +30,7 @@ export default function TestAgentPage() {
       const requestBody: AgentRequest = {
         message: message.trim(),
         generateAudio,
+        username: username.trim() || undefined,
       };
 
       const res = await fetch('/api/agent', {
@@ -59,6 +70,20 @@ export default function TestAgentPage() {
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Username (optional)
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username for personalized responses"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                 Message

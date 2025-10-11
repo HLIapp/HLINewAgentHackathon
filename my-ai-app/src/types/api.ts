@@ -3,6 +3,7 @@ export interface AgentRequest {
   message: string;
   voiceId?: string;
   generateAudio?: boolean;
+  username?: string;
 }
 
 // API Response Types
@@ -11,6 +12,7 @@ export interface AgentResponse {
   timestamp: string;
   audio?: string; // Base64 encoded audio data
   audioError?: string;
+  username?: string;
 }
 
 export interface AgentError {
@@ -26,6 +28,7 @@ export interface AgentInfoResponse {
       message: string;
       voiceId: string;
       generateAudio: string;
+      username: string;
     };
   };
 }

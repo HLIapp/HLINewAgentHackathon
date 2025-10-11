@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Health AI Assistant
 
-## Getting Started
+A comprehensive health AI assistant built for hackathon MVP with localStorage-based user management, OpenAI integration, ElevenLabs text-to-speech, and menstrual cycle tracking.
 
-First, run the development server:
+## 🚀 Quick Start
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables**:
+   Create `.env.local` with your API keys:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+   ELEVENLABS_VOICE_ID=your_voice_id_here
+   ```
+
+3. **Run the application**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**:
+   Visit `http://localhost:3001`
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API Routes
+│   │   ├── agent/         # AI Agent endpoint
+│   │   └── cycle-phase/   # Cycle tracking endpoint
+│   ├── settings/          # User settings page
+│   ├── test-agent/        # AI agent test interface
+│   ├── test-cycle/        # Cycle tracker interface
+│   ├── layout.tsx         # Root layout with navigation
+│   └── page.tsx           # Home page
+├── components/            # Reusable components
+│   └── Navigation.tsx     # Main navigation
+├── types/                 # TypeScript type definitions
+│   └── api.ts            # API request/response types
+└── utils/                # Utility functions
+    ├── menstrualCycle.ts  # Cycle tracking utilities
+    └── userStorage.ts     # localStorage user management
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎯 Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **🤖 Personalized AI**: GPT-4 powered health assistant
+- **🔊 Text-to-Speech**: ElevenLabs integration for audio responses
+- **📅 Cycle Tracking**: Menstrual cycle phase detection and tracking
+- **💾 Local Storage**: No authentication required, data stays private
+- **🎨 Modern UI**: Clean, responsive interface with Tailwind CSS
+- **📱 Mobile Friendly**: Responsive design for all devices
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔧 API Endpoints
 
-## Learn More
+- **`POST /api/agent`** - Chat with AI assistant
+- **`POST /api/cycle-phase`** - Calculate cycle phase
+- **`GET /api/agent`** - API information
+- **`GET /api/cycle-phase`** - API information
 
-To learn more about Next.js, take a look at the following resources:
+## 📖 Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+For detailed setup instructions and API documentation, see [API_SETUP.md](./API_SETUP.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠 Development
 
-## Deploy on Vercel
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **AI**: OpenAI GPT-4
+- **Voice**: ElevenLabs
+- **Storage**: Browser localStorage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built for hackathon demonstration purposes.

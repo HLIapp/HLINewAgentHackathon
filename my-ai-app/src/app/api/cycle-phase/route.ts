@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { detectPhase, getPhaseDescription, getPhaseTips, CycleInfo } from '@/utils/menstrualCycle';
+import { updateUserCycleData, addCycleHistory, getMockUser } from '@/utils/userStorage';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { lastPeriod, cycleLength = 28 } = body;
+    const { lastPeriod, cycleLength = 28, username } = body;
 
     if (!lastPeriod) {
       return NextResponse.json(
@@ -26,11 +27,22 @@ export async function POST(request: NextRequest) {
     const description = getPhaseDescription(cycleInfo.phase);
     const tips = getPhaseTips(cycleInfo.phase);
 
+    // Store cycle data if username provided
+    if (username) {
+      updateUserCycleData(lastPeriod, cycleLength);
+      addCycleHistory({
+        date: lastPeriod,
+        cycleLength: cycleLength,
+        notes: `Cycle phase: ${cycleInfo.phase}`
+      });
+    }
+
     return NextResponse.json({
       ...cycleInfo,
       description,
       tips,
       timestamp: new Date().toISOString(),
+      username: username || 'anonymous',
     });
 
   } catch (error) {
@@ -49,7 +61,8 @@ export async function GET() {
       POST: '/api/cycle-phase - Calculate menstrual cycle phase',
       parameters: {
         lastPeriod: 'string (required) - Last period date in YYYY-MM-DD format',
-        cycleLength: 'number (optional) - Cycle length in days (default: 28)'
+        cycleLength: 'number (optional) - Cycle length in days (default: 28)',
+        username: 'string (optional) - Username for data storage'
       },
       phases: {
         menstrual: 'Days 1-5: Period is occurring',

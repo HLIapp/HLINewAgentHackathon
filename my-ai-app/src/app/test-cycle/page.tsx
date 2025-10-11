@@ -1,19 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { detectPhase, getPhaseDescription, getPhaseTips, CycleInfo, CyclePhase } from '@/utils/menstrualCycle';
+import { getUserProfile } from '@/utils/userStorage';
 
 export default function TestCyclePage() {
   const [lastPeriod, setLastPeriod] = useState('');
   const [cycleLength, setCycleLength] = useState(28);
   const [cycleInfo, setCycleInfo] = useState<CycleInfo | null>(null);
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleCalculate = () => {
+  useEffect(() => {
+    // Load user profile on component mount
+    const userProfile = getUserProfile();
+    if (userProfile) {
+      setUsername(userProfile.username);
+      setLastPeriod(userProfile.lastPeriod || '');
+      setCycleLength(userProfile.cycleLength);
+    }
+  }, []);
+
+  const handleCalculate = async () => {
     if (!lastPeriod) return;
 
-    const lastPeriodDate = new Date(lastPeriod);
-    const info = detectPhase(lastPeriodDate, cycleLength);
-    setCycleInfo(info);
+    setLoading(true);
+    setCycleInfo(null);
+
+    try {
+      const requestBody = {
+        lastPeriod: lastPeriod.trim(),
+        cycleLength,
+        username: username.trim() || undefined,
+      };
+
+      const res = await fetch('/api/cycle-phase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await res.json();
+      setCycleInfo(data);
+    } catch (error) {
+      console.error('Error:', error);
+      // Fallback to local calculation
+      const lastPeriodDate = new Date(lastPeriod);
+      const info = detectPhase(lastPeriodDate, cycleLength);
+      setCycleInfo(info);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getPhaseColor = (phase: CyclePhase): string => {
@@ -70,6 +109,21 @@ export default function TestCyclePage() {
         {/* Input Form */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Calculate Your Cycle Phase</h2>
+          
+          <div className="mb-4">
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              Username (optional)
+            </label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username for data storage"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label htmlFor="lastPeriod" className="block text-sm font-medium text-gray-700 mb-2">
@@ -100,10 +154,10 @@ export default function TestCyclePage() {
           </div>
           <button
             onClick={handleCalculate}
-            disabled={!lastPeriod}
+            disabled={loading || !lastPeriod.trim()}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Calculate Cycle Phase
+            {loading ? 'Calculating...' : 'Calculate Cycle Phase'}
           </button>
         </div>
 

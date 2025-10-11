@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { AgentRequest, AgentResponse, AgentError, AgentInfoResponse } from '@/types/api';
+import { getUserProfile, getMockUser } from '@/utils/userStorage';
+import { env, validateEnvironment } from '@/config/env';
+
+// Validate environment variables
+try {
+  validateEnvironment();
+} catch (error) {
+  console.error('Environment validation failed:', error);
+}
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: env.openai.apiKey,
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse<AgentResponse | AgentError>> {
   try {
     const body: AgentRequest = await request.json();
-    const { message, voiceId, generateAudio = false } = body;
+    const { message, voiceId, generateAudio = false, username } = body;
 
     if (!message) {
       return NextResponse.json(
@@ -19,13 +28,32 @@ export async function POST(request: NextRequest): Promise<NextResponse<AgentResp
       );
     }
 
-    // Generate response using OpenAI
+    // Get user context for personalization
+    let userContext = '';
+    let displayName = 'there';
+    
+    if (username) {
+      // Try to get user profile from localStorage simulation or mock data
+      const mockUser = getMockUser(username);
+      if (mockUser) {
+        userContext = `You are talking to ${mockUser.username} who is currently experiencing ${mockUser.symptoms.join(', ')} symptoms, has ${mockUser.mood} mood, and ${mockUser.energy} energy. Their goal is ${mockUser.goal}.`;
+        displayName = mockUser.username;
+      } else {
+        displayName = username;
+      }
+    }
+
+    // Generate response using OpenAI with personalization
+    const systemMessage = username 
+      ? `You are a helpful AI assistant specialized in women's health and menstrual cycle support. ${userContext} Provide personalized, empathetic, and helpful responses. Be supportive and understanding of their health journey.`
+      : 'You are a helpful AI assistant specialized in women\'s health and menstrual cycle support. Provide clear, concise, and helpful responses.';
+
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: env.openai.model,
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful AI assistant. Provide clear, concise, and helpful responses.'
+          content: systemMessage
         },
         {
           role: 'user',
@@ -41,23 +69,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<AgentResp
     const response: AgentResponse = {
       message: aiResponse,
       timestamp: new Date().toISOString(),
+      username: displayName,
     };
 
     // Generate audio using ElevenLabs if requested
-    if (generateAudio && process.env.ELEVENLABS_API_KEY) {
+    if (generateAudio && env.elevenlabs.apiKey) {
       try {
-        const voiceId = process.env.ELEVENLABS_VOICE_ID || voiceId || 'pNInz6obpgDQGcFmaJgB'; // Default voice
+        const selectedVoiceId = voiceId || env.elevenlabs.voiceId;
         
-        const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
           method: 'POST',
           headers: {
             'Accept': 'audio/mpeg',
             'Content-Type': 'application/json',
-            'xi-api-key': process.env.ELEVENLABS_API_KEY!,
+            'xi-api-key': env.elevenlabs.apiKey!,
           },
           body: JSON.stringify({
             text: aiResponse,
-            model_id: 'eleven_monolingual_v1',
+            model_id: env.elevenlabs.model,
             voice_settings: {
               stability: 0.5,
               similarity_boost: 0.5,
@@ -97,7 +126,8 @@ export async function GET(): Promise<NextResponse<AgentInfoResponse>> {
       parameters: {
         message: 'string (required) - The message to send to the AI',
         voiceId: 'string (optional) - ElevenLabs voice ID',
-        generateAudio: 'boolean (optional) - Whether to generate audio response'
+        generateAudio: 'boolean (optional) - Whether to generate audio response',
+        username: 'string (optional) - Username for personalization'
       }
     }
   });
