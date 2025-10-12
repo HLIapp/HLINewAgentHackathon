@@ -19,10 +19,20 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isFirstTime, setIsFirstTime] = useState(false);
+  // Calculate a date that puts user in luteal phase (day 21 of cycle)
+  const getLutealPhaseDate = () => {
+    const today = new Date();
+    const lutealStartDay = 21; // Days after period start
+    const daysAgo = lutealStartDay - 1;
+    const lutealDate = new Date(today);
+    lutealDate.setDate(today.getDate() - daysAgo);
+    return lutealDate.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     id: 'pjae',
     username: '',
-    lastPeriod: '',
+    lastPeriod: getLutealPhaseDate(),
     cycleLength: 28,
     goal: '',
     symptoms: [] as string[],
@@ -46,13 +56,15 @@ export default function SettingsPage() {
     const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
     setIsFirstTime(!hasCompletedOnboarding);
     
-    // Only load existing data if user has completed onboarding
+    // Initialize user data
+    const data = initializeUserData();
+    const userProfile = getUserProfile() || data.profile;
+    
+    setProfile(userProfile);
+    setUserData(data);
+    
+    // Only populate form with existing data if user has completed onboarding
     if (hasCompletedOnboarding) {
-      const data = initializeUserData();
-      const userProfile = getUserProfile() || data.profile;
-      
-      setProfile(userProfile);
-      setUserData(data);
       setFormData({
         id: userProfile.id,
         username: userProfile.username,
@@ -66,7 +78,7 @@ export default function SettingsPage() {
         theme: userProfile.preferences?.theme || 'light'
       });
     }
-    // If first time, form data already has empty defaults from useState
+    // If first time, keep the empty form defaults with luteal phase date
   }, []);
 
   const handleSave = () => {
@@ -85,8 +97,16 @@ export default function SettingsPage() {
       }
     };
 
+    // Create userData if it doesn't exist
+    const baseUserData = userData || {
+      profile: updatedProfile,
+      cycleHistory: [],
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
+    };
+
     const updatedUserData: UserData = {
-      ...userData!,
+      ...baseUserData,
       profile: updatedProfile,
       lastUpdated: new Date().toISOString()
     };
@@ -99,12 +119,10 @@ export default function SettingsPage() {
     // Mark onboarding as completed
     localStorage.setItem('hasCompletedOnboarding', 'true');
     
-    // If this is first time, redirect to home
-    if (isFirstTime) {
+    // Always redirect to home after saving (whether first time or not)
+    setTimeout(() => {
       router.push('/');
-    } else {
-      alert('Settings saved successfully!');
-    }
+    }, 100);
   };
 
   const handleReset = () => {
@@ -324,11 +342,11 @@ export default function SettingsPage() {
               </div>
               <div className="flex gap-2">
                 <span className="text-gray-500">Cycle History:</span>
-                <span className="text-gray-900">{userData.cycleHistory.length} entries</span>
+                <span className="text-gray-900">{userData.cycleHistory?.length || 0} entries</span>
               </div>
               <div className="flex gap-2">
                 <span className="text-gray-500">Current Symptoms:</span>
-                <span className="text-gray-900">{userData.profile.symptoms.join(', ') || 'None'}</span>
+                <span className="text-gray-900">{userData.profile.symptoms?.join(', ') || 'None'}</span>
               </div>
             </div>
           </div>
