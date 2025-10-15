@@ -181,7 +181,7 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
   
   luteal: [
     {
-      phase_tags: ['luteal', 'menstrual'],
+      phase_tags: ['luteal'],
       category: 'movement',
       emoji: '🧘',
       benefit: 'Physical Relief',
