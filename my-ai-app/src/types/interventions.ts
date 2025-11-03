@@ -66,6 +66,7 @@ export interface SynthesizedPractice {
   estimated_time: number;
   audio_base64?: string;
   visual_url?: string;
+  visual_urls?: string[]; // Array of image URLs for step-by-step visual guides
   generated_at: string;
 }
 

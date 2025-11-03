@@ -255,23 +255,66 @@ Return the narration as a single flowing script.`;
       return NextResponse.json(practice);
     }
 
-    // For VISUAL mode - stub for now
+    // For VISUAL mode - return visual diagram images
     if (mode === 'visual') {
-      const practice: SynthesizedPractice = {
-        intervention_title,
-        mode: 'visual',
-        steps: [
+      let visualSteps: PracticeStep[] = [];
+      let visualUrls: string[] = [];
+      
+      // For Child's Pose, return the step-by-step visual diagrams
+      if (intervention_title === "Child's Pose") {
+        visualUrls = [
+          "/Child's Pose - Step 1.png",
+          "/Child's Pose - Step 2.png",
+          "/Child's Pose - Step 3.png",
+          "/Child's Pose - Step 4.png"
+        ];
+        
+        visualSteps = [
+          {
+            step_number: 1,
+            instruction: 'Kneel, touch big toes together',
+            physiological_explanation: 'Setting up the foundation for the pose'
+          },
+          {
+            step_number: 2,
+            instruction: 'Sink hips toward heels, extend arms forward',
+            physiological_explanation: 'Gentle stretch through the back and hips'
+          },
+          {
+            step_number: 3,
+            instruction: 'Rest forehead on floor, breathe deeply',
+            physiological_explanation: 'Increasing pelvic blood flow and relaxation'
+          },
+          {
+            step_number: 4,
+            instruction: 'Slowly rise when ready',
+            physiological_explanation: 'Completing the practice with awareness'
+          }
+        ];
+      } else {
+        // For other interventions, use placeholder
+        visualSteps = [
           {
             step_number: 1,
             instruction: 'Visual guide generation coming soon',
             physiological_explanation: 'We are working on generating illustrated step-by-step guides using AI.'
           }
-        ],
+        ];
+      }
+
+      const practice: SynthesizedPractice = {
+        intervention_title,
+        mode: 'visual',
+        steps: visualSteps,
         reflection_question: 'How do you feel after this practice?',
         estimated_time: (fullIntervention?.duration_minutes || 5) * 60,
-        visual_url: undefined,
+        visual_url: visualUrls.length > 0 ? visualUrls[0] : undefined, // Keep for backward compatibility
+        visual_urls: visualUrls, // New field for multiple images
         generated_at: new Date().toISOString(),
       };
+
+      // Cache the result
+      synthesisCache.set(cacheKey, { practice: practice as any, timestamp: now });
 
       return NextResponse.json(practice);
     }
@@ -306,7 +349,7 @@ export async function GET() {
     modes: {
       text: 'Step-by-step written instructions with physiological explanations',
       audio: 'Narrated audio guide using ElevenLabs text-to-speech',
-      visual: 'Illustrated guide (coming soon)'
+      visual: 'Step-by-step illustrated visual diagrams with instructions'
     },
     example_request: {
       intervention_title: "Child's Pose",

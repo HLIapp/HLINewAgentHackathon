@@ -16,6 +16,7 @@ export default function InterventionDetailPage() {
   const [synthesizedContent, setSynthesizedContent] = useState<Map<GuideMode, any>>(new Map());
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [visualImagesLoaded, setVisualImagesLoaded] = useState(false);
   
   // Reflection form state
   const [rating, setRating] = useState<number | null>(null);
@@ -193,6 +194,9 @@ export default function InterventionDetailPage() {
     if (newModes.has(mode)) {
       // Remove mode if already selected
       newModes.delete(mode);
+      if (mode === 'visual') {
+        setVisualImagesLoaded(false);
+      }
     } else {
       // Add mode if not selected
       newModes.add(mode);
@@ -203,30 +207,72 @@ export default function InterventionDetailPage() {
         newContent.set(mode, { status: 'loading' });
         setSynthesizedContent(newContent);
         
-        try {
-          const response = await fetch('/api/synthesize', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              intervention_title: intervention.title,
-              intervention_description: intervention.description,
-              mode: mode,
-              phase: intervention.phase_tags[0],
-            }),
-          });
+        // For visual mode, simulate loading delay to show spinner
+        if (mode === 'visual') {
+          setVisualImagesLoaded(false);
+          
+          // Simulate 2 second loading delay
+          setTimeout(async () => {
+            try {
+              const response = await fetch('/api/synthesize', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  intervention_title: intervention.title,
+                  intervention_description: intervention.description,
+                  mode: mode,
+                  phase: intervention.phase_tags[0],
+                }),
+              });
 
-          const data = await response.json();
-          const updatedContent = new Map(synthesizedContent);
-          updatedContent.set(mode, { status: 'ready', data });
-          setSynthesizedContent(updatedContent);
-        } catch (error) {
-          console.error('Synthesis error:', error);
-          const updatedContent = new Map(synthesizedContent);
-          updatedContent.set(mode, { status: 'error', error });
-          setSynthesizedContent(updatedContent);
+              const data = await response.json();
+              const updatedContent = new Map(synthesizedContent);
+              updatedContent.set(mode, { status: 'ready', data });
+              setSynthesizedContent(updatedContent);
+              
+              // Show images after a brief additional delay to complete the loading effect
+              setTimeout(() => {
+                setVisualImagesLoaded(true);
+              }, 500);
+            } catch (error) {
+              console.error('Synthesis error:', error);
+              const updatedContent = new Map(synthesizedContent);
+              updatedContent.set(mode, { status: 'error', error });
+              setSynthesizedContent(updatedContent);
+            }
+          }, 2000);
+        } else {
+          // For other modes, load immediately
+          try {
+            const response = await fetch('/api/synthesize', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                intervention_title: intervention.title,
+                intervention_description: intervention.description,
+                mode: mode,
+                phase: intervention.phase_tags[0],
+              }),
+            });
+
+            const data = await response.json();
+            const updatedContent = new Map(synthesizedContent);
+            updatedContent.set(mode, { status: 'ready', data });
+            setSynthesizedContent(updatedContent);
+          } catch (error) {
+            console.error('Synthesis error:', error);
+            const updatedContent = new Map(synthesizedContent);
+            updatedContent.set(mode, { status: 'error', error });
+            setSynthesizedContent(updatedContent);
+          }
         }
+      } else if (mode === 'visual' && synthesizedContent.has('visual')) {
+        // If already loaded, show images immediately
+        setVisualImagesLoaded(true);
       }
     }
     
@@ -457,18 +503,59 @@ export default function InterventionDetailPage() {
                   <h3 className="text-sm font-semibold text-gray-900">Visual Guide</h3>
                 </div>
 
-                {synthesizedContent.get('visual')?.status === 'loading' && (
+                {(synthesizedContent.get('visual')?.status === 'loading' || 
+                  (synthesizedContent.get('visual')?.status === 'ready' && !visualImagesLoaded)) && (
                   <div className="text-center py-8">
-                    <div className="text-3xl mb-3">🖼️</div>
-                    <p className="text-xs text-gray-600">Generating visual...</p>
+                    <div className="text-3xl mb-3 animate-pulse">🖼️</div>
+                    <p className="text-xs text-gray-600">Generating visual diagrams...</p>
                   </div>
                 )}
 
-                {(!synthesizedContent.has('visual') || synthesizedContent.get('visual')?.status === 'ready') && (
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <p className="text-xs text-gray-600 text-center">
-                      Visual guides coming soon
-                    </p>
+                {synthesizedContent.get('visual')?.status === 'ready' && visualImagesLoaded && (
+                  <div className="space-y-4">
+                    {synthesizedContent.get('visual')?.data?.visual_urls && 
+                     synthesizedContent.get('visual')?.data?.visual_urls.length > 0 ? (
+                      // Display step-by-step visual diagrams in 2 columns
+                      <div className="grid grid-cols-2 gap-3">
+                        {synthesizedContent.get('visual')?.data?.visual_urls.map((url: string, index: number) => {
+                          const step = synthesizedContent.get('visual')?.data?.steps?.[index];
+                          return (
+                            <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="flex-shrink-0 w-5 h-5 bg-gray-900 text-white rounded flex items-center justify-center font-medium text-xs">
+                                  {index + 1}
+                                </div>
+                                {step && (
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-gray-900 line-clamp-2">{step.instruction}</p>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="w-full rounded-lg overflow-hidden border border-gray-200 mb-2">
+                                <img 
+                                  src={url} 
+                                  alt={`Step ${index + 1}: ${step?.instruction || ''}`}
+                                  className="w-full h-auto object-contain max-h-48"
+                                  loading="lazy"
+                                />
+                              </div>
+                              {step?.physiological_explanation && (
+                                <p className="text-xs text-gray-600 italic line-clamp-2">
+                                  {step.physiological_explanation}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      // No visual URLs available (placeholder)
+                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                        <p className="text-xs text-gray-600 text-center">
+                          Visual guides coming soon
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
