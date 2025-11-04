@@ -27,6 +27,12 @@ export default function Navigation() {
                 Home
               </a>
               <a
+                href="/library"
+                className="text-gray-600 hover:text-gray-900 inline-flex items-center px-1 text-sm font-medium transition-colors"
+              >
+                Library
+              </a>
+              <a
                 href="/settings"
                 className="text-gray-600 hover:text-gray-900 inline-flex items-center px-1 text-sm font-medium transition-colors"
               >

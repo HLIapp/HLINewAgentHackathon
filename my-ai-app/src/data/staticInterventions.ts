@@ -320,3 +320,18 @@ export function getInterventionByTitle(title: string): StaticIntervention | null
 export function getAllStaticInterventions(): StaticIntervention[] {
   return Object.values(staticInterventions).flat();
 }
+
+// Helper to get all unique interventions (no duplicates)
+export function getAllUniqueInterventions(): StaticIntervention[] {
+  const interventionMap = new Map<string, StaticIntervention>();
+  
+  Object.values(staticInterventions).forEach(phaseInterventions => {
+    phaseInterventions.forEach(intervention => {
+      if (!interventionMap.has(intervention.title)) {
+        interventionMap.set(intervention.title, intervention);
+      }
+    });
+  });
+  
+  return Array.from(interventionMap.values());
+}

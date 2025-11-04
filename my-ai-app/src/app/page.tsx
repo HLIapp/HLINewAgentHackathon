@@ -210,11 +210,12 @@ export default function Home() {
               <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
                 Recommended for You
               </h2>
-              {currentPhase && (
-                <span className="text-xs text-gray-500 font-medium">
-                  {currentPhase} phase
-                </span>
-              )}
+              <button
+                onClick={() => router.push('/library')}
+                className="text-xs font-medium text-gray-900 hover:text-gray-700 transition-colors"
+              >
+                Explore Library
+              </button>
             </div>
 
             {loading && (
