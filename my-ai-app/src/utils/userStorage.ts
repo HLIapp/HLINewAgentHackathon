@@ -279,3 +279,88 @@ export const getLatestGoal = (interventionTitle?: string): SavedGoal | null => {
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )[0];
 };
+
+// Meal log storage functions
+import { MealAnalysis } from '@/types/interventions';
+
+export interface MealLog {
+  meal_description: string;
+  meal_analysis: MealAnalysis;
+  meal_image_base64?: string;
+  created_at: string;
+  intervention_title: string;
+}
+
+export const saveMealLog = (mealDescription: string, mealAnalysis: MealAnalysis, mealImageBase64?: string, interventionTitle: string = 'Protein-Rich Breakfast'): void => {
+  if (typeof window === 'undefined') return;
+  
+  const mealLogs = getMealLogs();
+  const newLog: MealLog = {
+    meal_description: mealDescription,
+    meal_analysis: mealAnalysis,
+    meal_image_base64: mealImageBase64,
+    created_at: new Date().toISOString(),
+    intervention_title: interventionTitle,
+  };
+  
+  mealLogs.push(newLog);
+  localStorage.setItem('mealLogs', JSON.stringify(mealLogs));
+};
+
+export const getMealLogs = (): MealLog[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('mealLogs');
+  return stored ? JSON.parse(stored) : [];
+};
+
+export const getLatestMealLog = (interventionTitle?: string): MealLog | null => {
+  const logs = getMealLogs();
+  if (logs.length === 0) return null;
+  
+  const filtered = interventionTitle 
+    ? logs.filter(l => l.intervention_title === interventionTitle)
+    : logs;
+  
+  if (filtered.length === 0) return null;
+  
+  // Sort by created_at descending and return most recent
+  return filtered.sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )[0];
+};
+
+// Walk photo storage functions
+export interface WalkPhoto {
+  photo_base64: string;
+  photo_url?: string; // URL.createObjectURL if using blob URL
+  challenge?: string;
+  created_at: string;
+  intervention_title: string;
+}
+
+export const saveWalkPhoto = (photoBase64: string, challenge?: string, interventionTitle: string = 'Power Walk'): void => {
+  if (typeof window === 'undefined') return;
+  
+  const walkPhotos = getWalkPhotos();
+  const newPhoto: WalkPhoto = {
+    photo_base64: photoBase64,
+    challenge,
+    created_at: new Date().toISOString(),
+    intervention_title: interventionTitle,
+  };
+  
+  walkPhotos.push(newPhoto);
+  localStorage.setItem('walkPhotos', JSON.stringify(walkPhotos));
+};
+
+export const getWalkPhotos = (interventionTitle?: string): WalkPhoto[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('walkPhotos');
+  const allPhotos: WalkPhoto[] = stored ? JSON.parse(stored) : [];
+  
+  if (interventionTitle) {
+    return allPhotos.filter(p => p.intervention_title === interventionTitle);
+  }
+  
+  return allPhotos;
+};

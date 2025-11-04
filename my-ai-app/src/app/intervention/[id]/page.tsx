@@ -5,6 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { getInterventionByTitle, getAllStaticInterventions, StaticIntervention } from '@/data/staticInterventions';
 import { addCompletedIntervention, isInterventionCompletedToday, CompletedIntervention } from '@/utils/userStorage';
 import GoalPlanningInteractive from '@/components/GoalPlanningInteractive';
+import ProteinBreakfastInteractive from '@/components/ProteinBreakfastInteractive';
+import PowerWalkInteractive from '@/components/PowerWalkInteractive';
+import ReflectiveJournalingInteractive from '@/components/ReflectiveJournalingInteractive';
 
 type GuideMode = 'text' | 'audio' | 'visual';
 
@@ -585,8 +588,23 @@ export default function InterventionDetailPage() {
   }
 
   // Render interactive component for Goal Planning
-  if (intervention.interaction_type === 'interactive_goal') {
+  if (intervention.interaction_type === 'interactive_goal' && intervention.title === 'Goal Planning') {
     return <GoalPlanningInteractive intervention={intervention} />;
+  }
+
+  // Render interactive component for Reflective Journaling
+  if (intervention.interaction_type === 'interactive_goal' && intervention.title === 'Reflective Journaling') {
+    return <ReflectiveJournalingInteractive intervention={intervention} />;
+  }
+
+  // Render interactive component for Protein-Rich Breakfast
+  if (intervention.interaction_type === 'interactive_nutrition') {
+    return <ProteinBreakfastInteractive intervention={intervention} />;
+  }
+
+  // Render interactive component for Power Walk
+  if (intervention.interaction_type === 'interactive_movement') {
+    return <PowerWalkInteractive intervention={intervention} />;
   }
 
   return (

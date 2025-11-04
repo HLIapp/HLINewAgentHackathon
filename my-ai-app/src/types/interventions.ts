@@ -15,7 +15,7 @@ export type PracticeCategory =
 
 export type CyclePhase = 'menstrual' | 'follicular' | 'ovulatory' | 'luteal';
 
-export type InterventionType = 'standard' | 'interactive_goal';
+export type InterventionType = 'standard' | 'interactive_goal' | 'interactive_nutrition' | 'interactive_movement';
 
 export interface InterventionCard {
   id: string;
@@ -103,5 +103,49 @@ export interface ActionableGoal {
     timeframe?: string;
   }[];
   next_action: string;
+  generated_at: string;
+}
+
+export interface MealSuggestionRequest {
+  ingredients: string[];
+  intervention_title: string;
+  phase: CyclePhase;
+}
+
+export interface MealAnalysisRequest {
+  meal_description?: string;
+  meal_image_base64?: string;
+  intervention_title: string;
+  phase: CyclePhase;
+}
+
+export interface MealAnalysis {
+  meal_description: string;
+  estimated_calories: number;
+  estimated_protein: number;
+  nutritional_assessment: string;
+  phase_support: string;
+  suggestions?: string[];
+  alternatives?: string[];
+  generated_at: string;
+}
+
+export interface WalkAccompanimentRequest {
+  intervention_title: string;
+  phase: CyclePhase;
+  preference?: 'music' | 'affirmations' | 'meditation' | 'all';
+}
+
+export interface WalkAccompaniment {
+  music_suggestions?: string[];
+  affirmations?: string[];
+  meditation_theme?: {
+    theme: string;
+    description: string;
+  };
+  photo_challenge?: {
+    challenge: string;
+    description: string;
+  };
   generated_at: string;
 }

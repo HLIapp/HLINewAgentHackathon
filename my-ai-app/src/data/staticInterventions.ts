@@ -87,7 +87,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Focus on deep breathing',
         'Maintain upright posture'
       ],
-      research: 'Exercise during follicular phase enhances fat oxidation and energy utilization (Oosthuyse & Bosch, 2010)'
+      research: 'Exercise during follicular phase enhances fat oxidation and energy utilization (Oosthuyse & Bosch, 2010)',
+      interaction_type: 'interactive_movement'
     },
     {
       phase_tags: ['follicular'],
@@ -104,7 +105,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Eat mindfully, chewing thoroughly',
         'Stay hydrated with water'
       ],
-      research: 'Protein intake during follicular phase supports optimal hormone synthesis (Barr et al., 2010)'
+      research: 'Protein intake during follicular phase supports optimal hormone synthesis (Barr et al., 2010)',
+      interaction_type: 'interactive_nutrition'
     },
     {
       phase_tags: ['follicular', 'ovulatory'],
@@ -216,7 +218,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Identify one pattern',
         'Decide: address now or wait until after period'
       ],
-      research: 'Expressive writing reduces rumination and anxiety (Pennebaker & Beall, 1986)'
+      research: 'Expressive writing reduces rumination and anxiety (Pennebaker & Beall, 1986)',
+      interaction_type: 'interactive_goal'
     },
     {
       phase_tags: ['luteal'],
