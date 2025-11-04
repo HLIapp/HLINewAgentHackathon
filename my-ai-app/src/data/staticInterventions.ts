@@ -145,7 +145,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         '30 sec rest',
         'Repeat 2-3 times'
       ],
-      research: 'Athletic performance peaks during ovulation due to optimal hormonal state (Janse de Jonge, 2003)'
+      research: 'Athletic performance peaks during ovulation due to optimal hormonal state (Janse de Jonge, 2003)',
+      interaction_type: 'interactive_movement'
     },
     {
       phase_tags: ['ovulatory', 'follicular'],

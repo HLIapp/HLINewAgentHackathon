@@ -175,3 +175,20 @@ export interface VoiceNeedsResponse {
   next_steps: VoiceNeedsNextStep[];
   generated_at?: string;
 }
+
+export interface HIITExercise {
+  id: string;
+  name: string;
+  emoji: string;
+  duration_seconds: number;
+  category: string;
+  difficulty?: 'easy' | 'moderate' | 'challenging';
+}
+
+export interface HIITWorkout {
+  exercises: HIITExercise[];
+  rounds: number;
+  work_duration: number; // seconds per exercise
+  rest_duration: number; // seconds between exercises
+  total_duration: number; // calculated total time
+}

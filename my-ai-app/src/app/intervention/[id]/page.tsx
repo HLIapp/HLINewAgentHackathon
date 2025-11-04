@@ -6,6 +6,7 @@ import { getInterventionByTitle, getAllStaticInterventions, StaticIntervention }
 import { addCompletedIntervention, isInterventionCompletedToday, CompletedIntervention } from '@/utils/userStorage';
 import GoalPlanningInteractive from '@/components/GoalPlanningInteractive';
 import VoiceYourNeedsInteractive from '@/components/VoiceYourNeedsInteractive';
+import HIITCircuitInteractive from '@/components/HIITCircuitInteractive';
 import ProteinBreakfastInteractive from '@/components/ProteinBreakfastInteractive';
 import PowerWalkInteractive from '@/components/PowerWalkInteractive';
 import ReflectiveJournalingInteractive from '@/components/ReflectiveJournalingInteractive';
@@ -586,6 +587,11 @@ export default function InterventionDetailPage() {
         </div>
       </div>
     );
+  }
+
+  // Render interactive component for HIIT Circuit
+  if (intervention.interaction_type === 'interactive_movement' && intervention.title === 'HIIT Circuit') {
+    return <HIITCircuitInteractive intervention={intervention} />;
   }
 
   // Render interactive component for Goal Planning
