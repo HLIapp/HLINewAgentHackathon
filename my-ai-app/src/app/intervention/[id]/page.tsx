@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { getInterventionByTitle, getAllStaticInterventions, StaticIntervention } from '@/data/staticInterventions';
 import { addCompletedIntervention, isInterventionCompletedToday, CompletedIntervention } from '@/utils/userStorage';
 import GoalPlanningInteractive from '@/components/GoalPlanningInteractive';
+import VoiceYourNeedsInteractive from '@/components/VoiceYourNeedsInteractive';
 import ProteinBreakfastInteractive from '@/components/ProteinBreakfastInteractive';
 import PowerWalkInteractive from '@/components/PowerWalkInteractive';
 import ReflectiveJournalingInteractive from '@/components/ReflectiveJournalingInteractive';
@@ -590,6 +591,11 @@ export default function InterventionDetailPage() {
   // Render interactive component for Goal Planning
   if (intervention.interaction_type === 'interactive_goal' && intervention.title === 'Goal Planning') {
     return <GoalPlanningInteractive intervention={intervention} />;
+  }
+
+  // Render interactive component for Voice Your Needs
+  if (intervention.interaction_type === 'interactive_goal' && intervention.title === 'Voice Your Needs') {
+    return <VoiceYourNeedsInteractive intervention={intervention} />;
   }
 
   // Render interactive component for Reflective Journaling

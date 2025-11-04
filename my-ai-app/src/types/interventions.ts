@@ -149,3 +149,29 @@ export interface WalkAccompaniment {
   };
   generated_at: string;
 }
+
+export interface VoiceNeedsRequest {
+  need_text?: string;
+  need_audio_base64?: string;
+  intervention_title: string;
+}
+
+export interface CommunicationTip {
+  tip: string;
+  explanation: string;
+}
+
+export interface VoiceNeedsNextStep {
+  step_number: number;
+  action: string;
+  timeframe?: string;
+}
+
+export interface VoiceNeedsResponse {
+  original_need: string;
+  refined_statement: string;
+  communication_tips: CommunicationTip[];
+  practice_script: string;
+  next_steps: VoiceNeedsNextStep[];
+  generated_at?: string;
+}

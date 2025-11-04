@@ -162,7 +162,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Practice saying it aloud',
         'Schedule conversation or send message'
       ],
-      research: 'Social confidence and verbal fluency peak mid-cycle (Haselton & Gangestad, 2006)'
+      research: 'Social confidence and verbal fluency peak mid-cycle (Haselton & Gangestad, 2006)',
+      interaction_type: 'interactive_goal'
     },
     {
       phase_tags: ['ovulatory'],
