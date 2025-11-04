@@ -3,13 +3,14 @@
  * Pre-defined interventions for each cycle phase to avoid API calls
  */
 
-import { InterventionCard, CyclePhase } from '@/types/interventions';
+import { InterventionCard, CyclePhase, InterventionType } from '@/types/interventions';
 
 export interface StaticIntervention extends Omit<InterventionCard, 'id' | 'relevance_score'> {
   research: string;
   instructions: string[];
   modification?: string;
   equipment?: string;
+  interaction_type?: InterventionType;
 }
 
 export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
@@ -120,7 +121,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Identify first step you can take today',
         'Visualize successful completion'
       ],
-      research: 'Cognitive performance peaks during follicular phase due to estrogen effects (Hampson, 1990)'
+      research: 'Cognitive performance peaks during follicular phase due to estrogen effects (Hampson, 1990)',
+      interaction_type: 'interactive_goal'
     }
   ],
   

@@ -4,6 +4,8 @@
  * Integrates with existing mock data structure
  */
 
+import { ActionableGoal } from '@/types/interventions';
+
 export interface UserProfile {
   id: string;
   username: string;
@@ -229,4 +231,51 @@ export const isInterventionCompletedToday = (interventionId: string): boolean =>
 export const getInterventionCompletionCount = (interventionId: string): number => {
   const completions = getCompletedInterventions();
   return completions.filter(c => c.intervention_id === interventionId).length;
+};
+
+// Goal storage functions
+import { ActionableGoal } from '@/types/interventions';
+
+export interface SavedGoal {
+  goal: string;
+  actionable_steps: ActionableGoal;
+  created_at: string;
+  intervention_title: string;
+}
+
+export const saveUserGoal = (goal: string, actionableSteps: ActionableGoal, interventionTitle: string): void => {
+  if (typeof window === 'undefined') return;
+  
+  const savedGoals = getUserGoals();
+  const newGoal: SavedGoal = {
+    goal,
+    actionable_steps: actionableSteps,
+    created_at: new Date().toISOString(),
+    intervention_title: interventionTitle,
+  };
+  
+  savedGoals.push(newGoal);
+  localStorage.setItem('userGoals', JSON.stringify(savedGoals));
+};
+
+export const getUserGoals = (): SavedGoal[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('userGoals');
+  return stored ? JSON.parse(stored) : [];
+};
+
+export const getLatestGoal = (interventionTitle?: string): SavedGoal | null => {
+  const goals = getUserGoals();
+  if (goals.length === 0) return null;
+  
+  const filtered = interventionTitle 
+    ? goals.filter(g => g.intervention_title === interventionTitle)
+    : goals;
+  
+  if (filtered.length === 0) return null;
+  
+  // Sort by created_at descending and return most recent
+  return filtered.sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )[0];
 };

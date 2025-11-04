@@ -3,6 +3,8 @@ import OpenAI from 'openai';
 import { env, validateEnvironment } from '@/config/env';
 import { SynthesizeRequest, SynthesizedPractice, PracticeStep } from '@/types/interventions';
 import { getInterventionByTitle } from '@/data/staticInterventions';
+import { getCachedTextGuide } from '@/data/generatedGuides';
+import { getCachedAudioGuide } from '@/data/audioGuidesLoader';
 
 // Validate environment variables
 try {
@@ -31,7 +33,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check cache
+    // Check file-based cache first (pre-generated guides)
+    if (mode === 'text') {
+      const cachedGuide = getCachedTextGuide(intervention_title);
+      if (cachedGuide) {
+        return NextResponse.json(cachedGuide);
+      }
+    }
+    
+    if (mode === 'audio') {
+      const cachedGuide = getCachedAudioGuide(intervention_title);
+      if (cachedGuide) {
+        return NextResponse.json(cachedGuide);
+      }
+      // If we have pre-generated guides, we should never reach here
+      // This means the cache lookup failed - return error instead of generating
+      return NextResponse.json(
+        { error: 'Audio guide not found in cache. Please regenerate guides.' },
+        { status: 404 }
+      );
+    }
+
+    // Fallback to in-memory cache for backward compatibility
     const cacheKey = `${intervention_title}_${mode}`;
     const cached = synthesisCache.get(cacheKey);
     const now = Date.now();
@@ -163,96 +186,13 @@ Return as JSON with this structure:
       return NextResponse.json(enhancedPractice);
     }
 
-    // For AUDIO mode - generate narrated guide using OpenAI + ElevenLabs
+    // For AUDIO mode - should not reach here if guides are pre-generated
+    // This code path is kept for backward compatibility but should not execute
     if (mode === 'audio') {
-      // Generate narration script using OpenAI
-      const prompt = `You are a health behavior guide creating a calming, encouraging narrated practice guide.
-
-Create a spoken guide for: "${intervention_title}"
-Description: ${intervention_description}
-
-Generate a natural, conversational script that:
-1. Warmly introduces the practice (15 seconds)
-2. Guides through each step with clear, calming instructions
-3. Includes breathing cues and physiological explanations
-4. Ends with a gentle reflection question
-
-Keep tone warm, encouraging, and supportive. Total duration should be about ${fullIntervention?.duration_minutes || 5} minutes.
-
-Return the narration as a single flowing script.`;
-
-      const completion = await openai.chat.completions.create({
-        model: env.openai.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a calming health guide. Create warm, encouraging narration for wellness practices.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      });
-
-      const narrationScript = completion.choices[0]?.message?.content || '';
-
-      // Generate audio using ElevenLabs
-      let audioBase64: string | undefined;
-      
-      if (env.elevenlabs.apiKey && narrationScript) {
-        try {
-          const elevenLabsResponse = await fetch(
-            `https://api.elevenlabs.io/v1/text-to-speech/${env.elevenlabs.voiceId}`,
-            {
-              method: 'POST',
-              headers: {
-                'Accept': 'audio/mpeg',
-                'Content-Type': 'application/json',
-                'xi-api-key': env.elevenlabs.apiKey,
-              },
-              body: JSON.stringify({
-                text: narrationScript,
-                model_id: env.elevenlabs.model,
-                voice_settings: {
-                  stability: 0.6,
-                  similarity_boost: 0.7,
-                },
-              }),
-            }
-          );
-
-          if (elevenLabsResponse.ok) {
-            const audioBuffer = await elevenLabsResponse.arrayBuffer();
-            audioBase64 = Buffer.from(audioBuffer).toString('base64');
-          }
-        } catch (audioError) {
-          console.error('ElevenLabs error:', audioError);
-        }
-      }
-
-      const practice: SynthesizedPractice = {
-        intervention_title,
-        mode: 'audio',
-        steps: [
-          {
-            step_number: 1,
-            instruction: 'Listen to the guided audio practice',
-            physiological_explanation: narrationScript,
-          }
-        ],
-        reflection_question: 'How do you feel after this practice?',
-        estimated_time: (fullIntervention?.duration_minutes || 5) * 60,
-        audio_base64: audioBase64,
-        generated_at: new Date().toISOString(),
-      };
-
-      // Cache the result
-      synthesisCache.set(cacheKey, { practice, timestamp: now });
-
-      return NextResponse.json(practice);
+      return NextResponse.json(
+        { error: 'Audio guide not found in cache. Please regenerate guides.' },
+        { status: 404 }
+      );
     }
 
     // For VISUAL mode - return visual diagram images

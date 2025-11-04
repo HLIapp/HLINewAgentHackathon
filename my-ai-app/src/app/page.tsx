@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUserProfile, initializeUserData, isInterventionCompletedToday } from '@/utils/userStorage';
-import { detectPhase } from '@/utils/menstrualCycle';
+import { detectPhase, getPhaseDescription } from '@/utils/menstrualCycle';
 import { InterventionCard } from '@/types/interventions';
 
 export default function Home() {
@@ -175,17 +175,10 @@ export default function Home() {
                   </h2>
                 </div>
                 
-                <p className="text-sm font-medium mb-1">
-                Ground & Recharge
-                </p>
                 {userProfile && (
-                  <><p className="text-xs text-gray-700">
-
-                    Progesterone rises → energy dips, stress sensitivity grows.
-
-                  </p><p className="text-xs text-gray-700">
-                      Focus: calm movement, anti-inflammatory meals, rest & reset.
-                    </p></>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {getPhaseDescription(currentPhase as any)}
+                  </p>
                 )}
               </div>
               <a
@@ -245,11 +238,19 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {interventions.map((intervention) => {
                 const completedToday = isInterventionCompletedToday(intervention.id);
+                // Create URL-friendly slug from title
+                const titleSlug = intervention.title
+                  .toLowerCase()
+                  .replace(/['"]/g, '') // Remove quotes
+                  .replace(/[^a-z0-9\s-]/g, '') // Remove special chars except spaces and hyphens
+                  .replace(/\s+/g, '-') // Replace spaces with hyphens
+                  .replace(/-+/g, '-') // Collapse multiple hyphens
+                  .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
                 
                 return (
                   <button
                     key={intervention.id}
-                    onClick={() => window.location.href = `/intervention/${intervention.id}`}
+                    onClick={() => window.location.href = `/intervention/${titleSlug}`}
                     className={`bg-white border rounded-lg p-6 text-left transition-all ${
                       completedToday 
                         ? 'border-green-300 bg-green-50'

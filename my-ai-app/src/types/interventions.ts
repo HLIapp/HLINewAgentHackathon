@@ -15,6 +15,8 @@ export type PracticeCategory =
 
 export type CyclePhase = 'menstrual' | 'follicular' | 'ovulatory' | 'luteal';
 
+export type InterventionType = 'standard' | 'interactive_goal';
+
 export interface InterventionCard {
   id: string;
   phase_tags: CyclePhase[];
@@ -85,4 +87,21 @@ export interface CompletedIntervention {
   feedback?: string;
   completed_full_practice: boolean;
   changes_noticed?: string[];
+}
+
+export interface GoalSynthesisRequest {
+  goal_text: string;
+  goal_audio_base64?: string;
+  intervention_title: string;
+}
+
+export interface ActionableGoal {
+  original_goal: string;
+  actionable_steps: {
+    step_number: number;
+    action: string;
+    timeframe?: string;
+  }[];
+  next_action: string;
+  generated_at: string;
 }

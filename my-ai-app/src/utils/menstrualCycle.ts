@@ -67,15 +67,19 @@ export function detectPhase(lastPeriod: Date, cycleLength: number = 28): CycleIn
 
 /**
  * Gets a human-readable description of the current cycle phase
+ * with detailed hormonal insights and body manifestations
  * @param phase - The cycle phase
- * @returns Description of the phase
+ * @returns Description of the phase with hormonal shifts and body effects
  */
 export function getPhaseDescription(phase: CyclePhase): string {
   const descriptions = {
-    menstrual: 'Menstrual phase - period is occurring',
-    follicular: 'Follicular phase - follicles are developing in the ovaries',
-    ovulatory: 'Ovulatory phase - ovulation is occurring or about to occur',
-    luteal: 'Luteal phase - uterine lining is preparing for potential pregnancy'
+    menstrual: `Menstrual Phase (Days 1-5) - Your period is here. Hormonally, estrogen and progesterone are at their lowest levels of the cycle, which triggers the shedding of your uterine lining. This hormonal drop can manifest as lower energy, increased sensitivity to pain, and a need for rest. You may notice your body craving warmth, comfort foods, and gentle movement. Your brain chemistry shifts to support rest and recovery - this is why many people feel more introspective and in need of downtime during this phase.`,
+    
+    follicular: `Follicular Phase (Days 6-13) - Your body is preparing for ovulation. Estrogen levels begin to rise steadily, triggered by follicle-stimulating hormone (FSH). As estrogen increases, you'll likely notice your energy levels climbing, your mood brightening, and your cognitive function sharpening. This is your body's natural "upward swing" - you may feel more motivated, optimistic, and capable of taking on challenges. Your body is building strength and endurance, making this an ideal time for strength training and high-intensity activities. Your skin may glow, and you may feel more confident and social.`,
+    
+    ovulatory: `Ovulatory Phase (Days 14-16) - Estrogen peaks right before ovulation, then drops slightly as luteinizing hormone (LH) surges to trigger the release of an egg. This is your peak performance window - estrogen at its highest enhances coordination, reaction time, and physical strength. You may notice peak social confidence, clearer communication, and increased libido. Your body is primed for connection and activity. Some people experience mild cramping or spotting during ovulation. After the egg is released, progesterone begins to rise.`,
+    
+    luteal: `Luteal Phase (Days 17-28) - After ovulation, progesterone rises significantly while estrogen also increases (creating a second, smaller peak). This hormonal shift supports potential pregnancy but also brings changes. In the early luteal phase (days 17-21), you may still feel energetic as progesterone builds gradually. By mid-to-late luteal phase (days 22-28), as progesterone peaks and then drops if no pregnancy occurs, you may notice increased sensitivity, mood fluctuations, fluid retention, and cravings. Your body is preparing for either pregnancy or menstruation - this can manifest as needing more rest, feeling more emotional, and preferring comfort and routine. Sleep quality may shift, and you may feel more sensitive to stress.`
   };
   
   return descriptions[phase];
