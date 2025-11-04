@@ -42,13 +42,14 @@ export default function SettingsPage() {
     theme: 'light' as 'light' | 'dark'
   });
 
+  const [customSymptomInput, setCustomSymptomInput] = useState('');
+
   const symptomOptions = [
     'bloating', 'headaches', 
     'cramps', 'breast tenderness', 'acne', 'cravings',
     'insomnia'
   ];
 
-  const moodOptions = ['anxious', 'happy', 'calm', 'stressed', 'mood swings'];
   const energyOptions = ['drained', 'normal', 'energized'];
 
   useEffect(() => {
@@ -154,6 +155,24 @@ export default function SettingsPage() {
     setFormData({ ...formData, symptoms: newSymptoms });
   };
 
+  const handleAddCustomSymptom = () => {
+    const trimmedSymptom = customSymptomInput.trim().toLowerCase();
+    if (trimmedSymptom && !formData.symptoms.includes(trimmedSymptom)) {
+      setFormData({ 
+        ...formData, 
+        symptoms: [...formData.symptoms, trimmedSymptom] 
+      });
+      setCustomSymptomInput('');
+    }
+  };
+
+  const handleRemoveSymptom = (symptom: string) => {
+    setFormData({ 
+      ...formData, 
+      symptoms: formData.symptoms.filter(s => s !== symptom) 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
@@ -244,18 +263,16 @@ export default function SettingsPage() {
                 <label className="block text-xs font-medium text-gray-700 mb-2">
                   Current Mood
                 </label>
-                <select
+                <input
+                  type="text"
                   value={formData.mood}
                   onChange={(e) => setFormData({ ...formData, mood: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                >
-                  <option value="">Select mood</option>
-                  {moodOptions.map(mood => (
-                    <option key={mood} value={mood} className="capitalize">
-                      {mood}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="e.g., anxious, calm, mood swings, overwhelmed..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Describe how you're feeling in your own words
+                </p>
               </div>
 
               <div>
@@ -285,19 +302,75 @@ export default function SettingsPage() {
             <label className="block text-xs font-medium text-gray-700 mb-3">
               Current Symptoms
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {symptomOptions.map(symptom => (
-                <label key={symptom} className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.symptoms.includes(symptom)}
-                    onChange={() => handleSymptomToggle(symptom)}
-                    className="h-4 w-4 text-gray-900 focus:ring-gray-400 border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-xs text-gray-700 capitalize">{symptom}</span>
-                </label>
-              ))}
+            
+            {/* Predefined Symptoms */}
+            <div className="mb-4">
+              <p className="text-xs text-gray-600 mb-2">Common symptoms:</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {symptomOptions.map(symptom => (
+                  <label key={symptom} className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.symptoms.includes(symptom)}
+                      onChange={() => handleSymptomToggle(symptom)}
+                      className="h-4 w-4 text-gray-900 focus:ring-gray-400 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-xs text-gray-700 capitalize">{symptom}</span>
+                  </label>
+                ))}
+              </div>
             </div>
+
+            {/* Custom Symptom Input */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-xs text-gray-600 mb-2">Add custom symptom:</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customSymptomInput}
+                  onChange={(e) => setCustomSymptomInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomSymptom();
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  placeholder="e.g., fatigue, joint pain, brain fog..."
+                />
+                <button
+                  onClick={handleAddCustomSymptom}
+                  disabled={!customSymptomInput.trim()}
+                  className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            {/* Selected Symptoms Display */}
+            {formData.symptoms.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-600 mb-2">Selected symptoms:</p>
+                <div className="flex flex-wrap gap-2">
+                  {formData.symptoms.map(symptom => (
+                    <span
+                      key={symptom}
+                      className="inline-flex items-center gap-1 px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full border border-gray-300"
+                    >
+                      <span className="capitalize">{symptom}</span>
+                      <button
+                        onClick={() => handleRemoveSymptom(symptom)}
+                        className="ml-1 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        aria-label={`Remove ${symptom}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
