@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { StaticIntervention } from '@/data/staticInterventions';
 import { SuccessReviewPrompt, SuccessReviewResponse } from '@/types/interventions';
@@ -51,13 +51,24 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
   const [viewMode, setViewMode] = useState<ViewMode>('prompt-selection');
   const [selectedPrompt, setSelectedPrompt] = useState<SuccessReviewPrompt | null>(null);
   const [winText, setWinText] = useState('');
-  const [audioBase64, setAudioBase64] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [amplifiedWin, setAmplifiedWin] = useState<SuccessReviewResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Cleanup audio URL on unmount
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
 
   const getPhaseColor = (phase: string) => {
     const colors = {
@@ -154,23 +165,22 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
         }
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result as string;
-          setAudioBase64(base64.split(',')[1]);
-        };
-        reader.readAsDataURL(audioBlob);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
         
+        // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      alert('Could not access microphone. Please use text input instead.');
+      setError(null);
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      setError('Could not access microphone. Please check permissions.');
     }
   };
 
@@ -181,19 +191,46 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
     }
   };
 
+  const convertBlobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const clearAudio = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioBlob(null);
+    setAudioUrl(null);
+  };
+
   const handleSubmit = async () => {
-    if (!winText.trim() && !audioBase64) {
-      alert('Please share your win using text or voice.');
+    if (!winText.trim() && !audioBlob) {
+      setError('Please share your win using text or voice.');
       return;
     }
 
     setIsProcessing(true);
+    setError(null);
 
     try {
+      let audioBase64: string | undefined;
+      
+      if (audioBlob) {
+        audioBase64 = await convertBlobToBase64(audioBlob);
+      }
+
       // If audio is provided, transcribe it first
       let finalWinText = winText;
       
-      if (audioBase64 && !winText) {
+      if (audioBase64 && !winText.trim()) {
         // Transcribe audio using the voice-needs API (it handles Whisper transcription)
         const transcriptionResponse = await fetch('/api/voice-needs', {
           method: 'POST',
@@ -209,11 +246,13 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
           const transcriptionData = await transcriptionResponse.json();
           // Use original_need which contains the transcribed text
           finalWinText = transcriptionData.original_need || transcriptionData.refined_statement || '';
+        } else {
+          throw new Error('Failed to transcribe audio. Please try using text input.');
         }
       }
 
       if (!finalWinText.trim()) {
-        alert('Could not process audio. Please try using text input.');
+        setError('Could not process audio. Please try using text input.');
         setIsProcessing(false);
         return;
       }
@@ -238,7 +277,7 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
       setViewMode('celebration');
     } catch (error) {
       console.error('Error processing win:', error);
-      alert('Something went wrong. Please try again.');
+      setError(error instanceof Error ? error.message : 'Something went wrong. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -422,42 +461,79 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
 
           {/* Input Area */}
           <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-8 shadow-lg mb-6">
-            <textarea
-              value={winText}
-              onChange={(e) => setWinText(e.target.value)}
-              placeholder="Tell us about your win... What did you accomplish? How did it feel? What does it mean to you?"
-              className="w-full h-48 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder-gray-400"
-            />
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Share your win
+              </label>
+              <textarea
+                value={winText}
+                onChange={(e) => setWinText(e.target.value)}
+                placeholder="Tell us about your win... What did you accomplish? How did it feel? What does it mean to you?"
+                className="w-full h-48 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder-gray-400"
+              />
+            </div>
 
-            {/* Voice Recording */}
-            <div className="mt-4 flex items-center gap-4">
-              <button
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  isRecording
-                    ? 'bg-red-500 text-white hover:bg-red-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {isRecording ? '🔴 Recording...' : '🎤 Hold to Record'}
-              </button>
-              {audioBase64 && (
-                <span className="text-sm text-green-600">✓ Audio recorded</span>
+            {/* Audio Recording Section */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Or record your win
+                </label>
+                {audioUrl && (
+                  <button
+                    onClick={clearAudio}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4">
+                {!isRecording && !audioBlob && (
+                  <button
+                    onClick={startRecording}
+                    className="px-6 py-3 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                  >
+                    🎤 Start Recording
+                  </button>
+                )}
+
+                {isRecording && (
+                  <button
+                    onClick={stopRecording}
+                    className="px-6 py-3 rounded-lg font-medium transition-colors bg-red-500 text-white hover:bg-red-600"
+                  >
+                    ⏹️ Stop Recording
+                  </button>
+                )}
+
+                {audioUrl && !isRecording && (
+                  <div className="flex items-center gap-4 flex-1">
+                    <audio
+                      src={audioUrl}
+                      controls
+                      className="flex-1 h-10"
+                    />
+                    <span className="text-sm text-green-600">✓ Ready</span>
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <p className="mt-2 text-sm text-red-600">{error}</p>
               )}
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={(!winText.trim() && !audioBase64) || isProcessing}
-            className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isProcessing ? '✨ Amplifying your win...' : '✨ Celebrate My Win'}
-          </button>
+                        {/* Submit Button */}
+              <button
+                onClick={handleSubmit}
+                disabled={(!winText.trim() && !audioBlob) || isProcessing}
+                className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? '✨ Amplifying your win...' : '✨ Celebrate My Win'}
+              </button>
         </div>
       </div>
     );
@@ -534,13 +610,14 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
           {/* Actions */}
           <div className="flex gap-4">
             <button
-              onClick={() => {
-                setViewMode('prompt-selection');
-                setSelectedPrompt(null);
-                setWinText('');
-                setAudioBase64(null);
-                setAmplifiedWin(null);
-              }}
+                                onClick={() => {
+                    setViewMode('prompt-selection');
+                    setSelectedPrompt(null);
+                    setWinText('');
+                    clearAudio();
+                    setAmplifiedWin(null);
+                    setError(null);
+                  }}
               className="flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
             >
               Celebrate Another Win
