@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { StaticIntervention } from '@/data/staticInterventions';
-import { addCompletedIntervention } from '@/utils/userStorage';
+import { useTimer, formatTime } from '@/hooks/useTimer';
+import { useInterventionCompletion } from '@/hooks/useInterventionCompletion';
+import InterventionHeader from '@/components/shared/InterventionHeader';
+import CelebrationCard from '@/components/shared/CelebrationCard';
 
 interface HeatTherapyInteractiveProps {
   intervention: StaticIntervention;
@@ -13,13 +15,11 @@ type PracticePhase = 'setup' | 'session' | 'completed';
 type Position = 'abdomen' | 'back' | 'both';
 
 export default function HeatTherapyInteractive({ intervention }: HeatTherapyInteractiveProps) {
-  const router = useRouter();
+  const { handleDone } = useInterventionCompletion();
   const [phase, setPhase] = useState<PracticePhase>('setup');
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [initialPainLevel, setInitialPainLevel] = useState<number>(5);
   const [finalPainLevel, setFinalPainLevel] = useState<number | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes in seconds
-  const [isPaused, setIsPaused] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [equipmentReady, setEquipmentReady] = useState(false);
   const [showSafetyReminder, setShowSafetyReminder] = useState(true);
@@ -27,154 +27,37 @@ export default function HeatTherapyInteractive({ intervention }: HeatTherapyInte
   const [showPositionReminder, setShowPositionReminder] = useState(false);
   const [currentSliderValue, setCurrentSliderValue] = useState(5);
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const positionReminderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
 
-  // Initialize slider value when entering completion phase
-  useEffect(() => {
-    if (phase === 'completed' && finalPainLevel === null) {
-      setCurrentSliderValue(initialPainLevel);
-    }
-  }, [phase, initialPainLevel, finalPainLevel]);
+  const completeSession = () => {
+    setPhase('completed');
+    if (positionReminderTimeoutRef.current) clearTimeout(positionReminderTimeoutRef.current);
+    stopRef.current?.();
+  };
 
-  // Cleanup timers on unmount
+  const { timeRemaining, isPaused, start, pause, resume, stop } = useTimer({
+    onComplete: completeSession,
+  });
+
+  // Store stop function in ref
   useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (positionReminderTimeoutRef.current) clearTimeout(positionReminderTimeoutRef.current);
-    };
-  }, []);
+    stopRef.current = stop;
+  }, [stop]);
 
   const startSession = () => {
     if (!selectedPosition || !equipmentReady) return;
     
     setPhase('session');
-    setTimeRemaining(300);
     setIsPaused(false);
 
-    // Main timer
-    const mainTimer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(mainTimer);
-          completeSession();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    
-    timerRef.current = mainTimer;
+    // Start main timer using hook (5 minutes = 300 seconds)
+    start(300);
 
     // Position comfort reminder at 2 minutes (120 seconds)
     positionReminderTimeoutRef.current = setTimeout(() => {
       setShowPositionReminder(true);
     }, 120000); // 2 minutes
-  };
-
-  const completeSession = () => {
-    setPhase('completed');
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (positionReminderTimeoutRef.current) clearTimeout(positionReminderTimeoutRef.current);
-  };
-
-  const handlePause = () => {
-    if (isPaused) {
-      // Resume
-      const remainingTime = timeRemaining || 300;
-      
-      const mainTimer = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(mainTimer);
-            completeSession();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-      timerRef.current = mainTimer;
-    } else {
-      // Pause
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    
-    setIsPaused((prev) => !prev);
-  };
-
-  const handleDone = () => {
-    // Mark as completed
-    const cachedInterventions = localStorage.getItem('current_interventions');
-    let interventionId = 'heat-therapy';
-    
-    if (cachedInterventions) {
-      try {
-        const parsed = JSON.parse(cachedInterventions);
-        const found = parsed.interventions.find((i: any) => i.title === intervention.title);
-        if (found) {
-          interventionId = found.id;
-        }
-      } catch (error) {
-        console.error('Error finding intervention ID:', error);
-      }
-    }
-
-    addCompletedIntervention({
-      intervention_id: interventionId,
-      intervention_title: intervention.title,
-      completed_at: new Date().toISOString(),
-      completed_full_practice: true,
-    });
-
-    router.back();
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const calculatePainReduction = (): number => {
-    if (finalPainLevel === null) return 0;
-    return initialPainLevel - finalPainLevel;
-  };
-
-  const getPhaseColor = (phase: string) => {
-    const colors = {
-      menstrual: 'bg-red-50 text-red-700 border-red-200',
-      follicular: 'bg-green-50 text-green-700 border-green-200',
-      ovulatory: 'bg-blue-50 text-blue-700 border-blue-200',
-      luteal: 'bg-purple-50 text-purple-700 border-purple-200',
-    };
-    return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
-  };
-
-  const getPhaseGuidance = (phase: string, category: string) => {
-    const guidance: Record<string, Record<string, { title: string; description: string; tips: string[] }>> = {
-      menstrual: {
-        supplementation: {
-          title: 'Why This Matters',
-          description: 'During your menstrual phase, heat therapy can provide natural pain relief that\'s as effective as NSAIDs. This gentle approach supports your body\'s healing process.',
-          tips: [
-            'Heat increases blood flow and relaxes muscles',
-            'This is a safe, drug-free way to manage pain',
-            'Your comfort matters—adjust as needed'
-          ]
-        }
-      }
-    };
-    
-    return guidance[phase]?.[category] || {
-      title: 'Why This Matters',
-      description: 'Heat therapy provides natural pain relief by increasing blood flow and relaxing muscles.',
-      tips: [
-        'Heat increases blood flow and relaxes muscles',
-        'This is a safe, drug-free way to manage pain',
-        'Your comfort matters—adjust as needed'
-      ]
-    };
   };
 
   const canStartSession = selectedPosition !== null && equipmentReady;
@@ -184,82 +67,7 @@ export default function HeatTherapyInteractive({ intervention }: HeatTherapyInte
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2"
-          >
-            ← Back
-          </button>
-
-          {/* Intervention Header */}
-          <div className="bg-white border border-gray-200 rounded-lg p-8 mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="text-4xl">{intervention.emoji}</div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  {intervention.phase_tags.map((phaseTag) => (
-                    <span
-                      key={phaseTag}
-                      className={`text-xs font-medium px-2 py-0.5 rounded border capitalize ${getPhaseColor(phaseTag)}`}
-                    >
-                      {phaseTag}
-                    </span>
-                  ))}
-                </div>
-                <h1 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">
-                  {intervention.title}
-                </h1>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>{intervention.duration_minutes} min</span>
-                  <span>·</span>
-                  <span className="capitalize">{intervention.category}</span>
-                  <span>·</span>
-                  <span>{intervention.location}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <p className="text-sm text-gray-900 leading-relaxed mb-4 font-medium">
-              {intervention.description}
-            </p>
-
-            {/* Phase-Specific Guidance */}
-            {intervention.phase_tags[0] && (
-              <div className={`rounded-lg border p-4 mb-4 ${getPhaseColor(intervention.phase_tags[0])}`}>
-                {(() => {
-                  const guidance = getPhaseGuidance(intervention.phase_tags[0], intervention.category);
-                  return (
-                    <>
-                      <h3 className="text-xs font-semibold mb-2">{guidance.title}</h3>
-                      <p className="text-xs leading-relaxed mb-3">
-                        {guidance.description}
-                      </p>
-                      <div className="space-y-1">
-                        {guidance.tips.map((tip: string, index: number) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <span className="text-xs mt-0.5">•</span>
-                            <p className="text-xs leading-relaxed">{tip}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            )}
-
-            {/* Research Citation */}
-            <p className="text-xs text-gray-500">
-              <a 
-                href="#research" 
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                {intervention.research}
-              </a>
-            </p>
-          </div>
+          <InterventionHeader intervention={intervention} onBack={() => handleDone(intervention)} />
 
           {/* Setup Wizard */}
           <div className="bg-white border border-gray-200 rounded-lg p-8">
@@ -453,7 +261,6 @@ export default function HeatTherapyInteractive({ intervention }: HeatTherapyInte
           <button
             onClick={() => {
               completeSession();
-              if (timerRef.current) clearInterval(timerRef.current);
             }}
             className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
           >
@@ -548,59 +355,22 @@ export default function HeatTherapyInteractive({ intervention }: HeatTherapyInte
               </div>
 
               {/* Celebration Card */}
-              <div className="bg-white border border-gray-200 rounded-lg p-12 text-center mb-6">
-                <div className="text-8xl mb-6">🎉</div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Session Complete!
-                </h2>
-                <p className="text-lg text-gray-600 mb-8">
-                  You did it! Great job completing your heat therapy session.
-                </p>
-
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
-                  <div className="grid grid-cols-2 gap-4 text-left">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Position</p>
-                      <p className="text-2xl font-bold text-gray-900 capitalize">{selectedPosition}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Initial Pain</p>
-                      <p className="text-2xl font-bold text-gray-900">{initialPainLevel}/10</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Final Pain</p>
-                      <p className="text-2xl font-bold text-gray-900">{finalPainLevel}/10</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Reduction</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {painReduction > 0 ? `-${painReduction}` : '0'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Optional Reflection */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Optional: How did this session feel?
-                  </label>
-                  <textarea
-                    value={reflection}
-                    onChange={(e) => setReflection(e.target.value)}
-                    placeholder="Share any thoughts or observations..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                    rows={3}
-                  />
-                </div>
-
-                <button
-                  onClick={handleDone}
-                  className="w-full px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  Done
-                </button>
-              </div>
+              <CelebrationCard
+                intervention={intervention}
+                stats={[
+                  { label: 'Position', value: selectedPosition ? selectedPosition.charAt(0).toUpperCase() + selectedPosition.slice(1) : '' },
+                  { label: 'Initial Pain', value: `${initialPainLevel}/10` },
+                  { label: 'Final Pain', value: `${finalPainLevel}/10` },
+                  { label: 'Reduction', value: painReduction > 0 ? `-${painReduction}` : '0' },
+                ]}
+                message="You did it! Great job completing your heat therapy session."
+                onDone={() => handleDone(intervention, { notes: reflection })}
+                reflection={{
+                  value: reflection,
+                  onChange: setReflection,
+                  placeholder: "Share any thoughts or observations..."
+                }}
+              />
             </>
           )}
         </div>

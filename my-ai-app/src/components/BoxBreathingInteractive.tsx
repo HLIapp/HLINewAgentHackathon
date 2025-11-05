@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { StaticIntervention } from '@/data/staticInterventions';
-import { addCompletedIntervention } from '@/utils/userStorage';
+import { useTimer, formatTime } from '@/hooks/useTimer';
+import { useInterventionCompletion } from '@/hooks/useInterventionCompletion';
+import InterventionHeader from '@/components/shared/InterventionHeader';
+import CelebrationCard from '@/components/shared/CelebrationCard';
 
 interface BoxBreathingInteractiveProps {
   intervention: StaticIntervention;
@@ -13,23 +15,35 @@ type PracticePhase = 'selection' | 'countdown' | 'breathing' | 'completed';
 type BreathingPhase = 'inhale' | 'hold1' | 'exhale' | 'hold2';
 
 export default function BoxBreathingInteractive({ intervention }: BoxBreathingInteractiveProps) {
-  const router = useRouter();
+  const { handleDone } = useInterventionCompletion();
   const [duration, setDuration] = useState<3 | 5>(3);
   const [phase, setPhase] = useState<PracticePhase>('selection');
   const [countdown, setCountdown] = useState(3);
-  const [timeRemaining, setTimeRemaining] = useState(0);
   const [breathingPhase, setBreathingPhase] = useState<BreathingPhase>('inhale');
   const [cycleCount, setCycleCount] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const breathingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+
+  const completePractice = () => {
+    setPhase('completed');
+    if (breathingTimerRef.current) clearInterval(breathingTimerRef.current);
+    stopRef.current?.();
+  };
+
+  const { timeRemaining, isPaused, start, pause, resume, stop } = useTimer({
+    onComplete: completePractice,
+  });
+
+  // Store stop function in ref
+  useEffect(() => {
+    stopRef.current = stop;
+  }, [stop]);
 
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
       if (breathingTimerRef.current) clearInterval(breathingTimerRef.current);
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     };
@@ -55,25 +69,12 @@ export default function BoxBreathingInteractive({ intervention }: BoxBreathingIn
 
   const startBreathing = () => {
     const totalSeconds = duration * 60;
-    setTimeRemaining(totalSeconds);
     setPhase('breathing');
     setBreathingPhase('inhale');
     setCycleCount(0);
-    setIsPaused(false);
 
-    // Main timer
-    const mainTimer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(mainTimer);
-          completePractice();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    
-    timerRef.current = mainTimer;
+    // Start main timer using hook
+    start(totalSeconds);
 
     // Breathing phase timer (4 seconds per phase)
     let currentBreathingPhase: BreathingPhase = 'inhale';
@@ -97,28 +98,10 @@ export default function BoxBreathingInteractive({ intervention }: BoxBreathingIn
     breathingTimerRef.current = breathingTimer;
   };
 
-  const completePractice = () => {
-    setPhase('completed');
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (breathingTimerRef.current) clearInterval(breathingTimerRef.current);
-  };
-
   const handlePause = () => {
     if (isPaused) {
-      // Resume
       // Resume main timer
-      const mainTimer = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(mainTimer);
-            completePractice();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-      timerRef.current = mainTimer;
+      resume();
 
       // Resume breathing phase timer
       let phaseCounter = 0;
@@ -140,44 +123,9 @@ export default function BoxBreathingInteractive({ intervention }: BoxBreathingIn
       breathingTimerRef.current = breathingTimer;
     } else {
       // Pause
-      if (timerRef.current) clearInterval(timerRef.current);
+      pause();
       if (breathingTimerRef.current) clearInterval(breathingTimerRef.current);
     }
-    
-    setIsPaused((prev) => !prev);
-  };
-
-  const handleDone = () => {
-    // Mark as completed
-    const cachedInterventions = localStorage.getItem('current_interventions');
-    let interventionId = 'box-breathing';
-    
-    if (cachedInterventions) {
-      try {
-        const parsed = JSON.parse(cachedInterventions);
-        const found = parsed.interventions.find((i: any) => i.title === intervention.title);
-        if (found) {
-          interventionId = found.id;
-        }
-      } catch (error) {
-        console.error('Error finding intervention ID:', error);
-      }
-    }
-
-    addCompletedIntervention({
-      intervention_id: interventionId,
-      intervention_title: intervention.title,
-      completed_at: new Date().toISOString(),
-      completed_full_practice: true,
-    });
-
-    router.back();
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getBreathingInstruction = (): string => {
@@ -195,134 +143,13 @@ export default function BoxBreathingInteractive({ intervention }: BoxBreathingIn
     }
   };
 
-  const getPhaseColor = (phase: string) => {
-    const colors = {
-      menstrual: 'bg-red-50 text-red-700 border-red-200',
-      follicular: 'bg-green-50 text-green-700 border-green-200',
-      ovulatory: 'bg-blue-50 text-blue-700 border-blue-200',
-      luteal: 'bg-purple-50 text-purple-700 border-purple-200',
-    };
-    return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
-  };
-
-  const getPhaseGuidance = (phase: string, category: string) => {
-    const guidance: Record<string, Record<string, { title: string; description: string; tips: string[] }>> = {
-      menstrual: {
-        breathwork: {
-          title: 'Why This Matters',
-          description: 'During your menstrual phase, your body needs rest and recovery. This breathing practice helps activate your parasympathetic nervous system, reducing stress and promoting calm.',
-          tips: [
-            'This practice directly supports your nervous system',
-            'Even a few minutes can make a difference',
-            'There\'s no wrong way to breathe—trust your body'
-          ]
-        }
-      },
-      luteal: {
-        breathwork: {
-          title: 'Why This Matters',
-          description: 'During your luteal phase, your nervous system may be more sensitive to stress. Breathwork helps you find calm.',
-          tips: [
-            'This practice directly supports your nervous system',
-            'Even a few minutes can make a difference',
-            'There\'s no wrong way to breathe—trust your body'
-          ]
-        }
-      }
-    };
-    
-    return guidance[phase]?.[category] || {
-      title: 'Why This Matters',
-      description: 'Controlled breathing activates your parasympathetic response, reducing cortisol and stress.',
-      tips: [
-        'This practice directly supports your nervous system',
-        'Even a few minutes can make a difference',
-        'There\'s no wrong way to breathe—trust your body'
-      ]
-    };
-  };
 
   // Selection Screen
   if (phase === 'selection') {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2"
-          >
-            ← Back
-          </button>
-
-          {/* Intervention Header */}
-          <div className="bg-white border border-gray-200 rounded-lg p-8 mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="text-4xl">{intervention.emoji}</div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  {intervention.phase_tags.map((phaseTag) => (
-                    <span
-                      key={phaseTag}
-                      className={`text-xs font-medium px-2 py-0.5 rounded border capitalize ${getPhaseColor(phaseTag)}`}
-                    >
-                      {phaseTag}
-                    </span>
-                  ))}
-                </div>
-                <h1 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">
-                  {intervention.title}
-                </h1>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>{intervention.duration_minutes} min</span>
-                  <span>·</span>
-                  <span className="capitalize">{intervention.category}</span>
-                  <span>·</span>
-                  <span>{intervention.location}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <p className="text-sm text-gray-900 leading-relaxed mb-4 font-medium">
-              {intervention.description}
-            </p>
-
-            {/* Phase-Specific Guidance */}
-            {intervention.phase_tags[0] && (
-              <div className={`rounded-lg border p-4 mb-4 ${getPhaseColor(intervention.phase_tags[0])}`}>
-                {(() => {
-                  const guidance = getPhaseGuidance(intervention.phase_tags[0], intervention.category);
-                  return (
-                    <>
-                      <h3 className="text-xs font-semibold mb-2">{guidance.title}</h3>
-                      <p className="text-xs leading-relaxed mb-3">
-                        {guidance.description}
-                      </p>
-                      <div className="space-y-1">
-                        {guidance.tips.map((tip: string, index: number) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <span className="text-xs mt-0.5">•</span>
-                            <p className="text-xs leading-relaxed">{tip}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            )}
-
-            {/* Research Citation */}
-            <p className="text-xs text-gray-500">
-              <a 
-                href="#research" 
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                {intervention.research}
-              </a>
-            </p>
-          </div>
+          <InterventionHeader intervention={intervention} onBack={() => handleDone(intervention)} />
 
           {/* Duration Selection */}
           <div className="bg-white border border-gray-200 rounded-lg p-8">
@@ -432,7 +259,6 @@ export default function BoxBreathingInteractive({ intervention }: BoxBreathingIn
           <button
             onClick={() => {
               completePractice();
-              if (timerRef.current) clearInterval(timerRef.current);
               if (breathingTimerRef.current) clearInterval(breathingTimerRef.current);
             }}
             className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
@@ -449,43 +275,17 @@ export default function BoxBreathingInteractive({ intervention }: BoxBreathingIn
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 flex flex-col items-center justify-center min-h-screen">
-          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <div className="text-8xl mb-6">🎉</div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Practice Complete!
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              You did it! Great job completing your breathing practice.
-            </p>
-
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
-              <div className="grid grid-cols-2 gap-4 text-left">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Duration</p>
-                  <p className="text-2xl font-bold text-gray-900">{duration} min</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Cycles</p>
-                  <p className="text-2xl font-bold text-gray-900">{cycleCount}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Phase</p>
-                  <p className="text-2xl font-bold text-gray-900 capitalize">{intervention.phase_tags[0]}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Benefit</p>
-                  <p className="text-2xl font-bold text-gray-900">{intervention.benefit}</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleDone}
-              className="w-full px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Done
-            </button>
-          </div>
+          <CelebrationCard
+            intervention={intervention}
+            stats={[
+              { label: 'Duration', value: `${duration} min` },
+              { label: 'Cycles', value: cycleCount },
+              { label: 'Phase', value: intervention.phase_tags[0] ? intervention.phase_tags[0].charAt(0).toUpperCase() + intervention.phase_tags[0].slice(1) : '' },
+              { label: 'Benefit', value: intervention.benefit },
+            ]}
+            message="You did it! Great job completing your breathing practice."
+            onDone={() => handleDone(intervention)}
+          />
         </div>
       </div>
     );
