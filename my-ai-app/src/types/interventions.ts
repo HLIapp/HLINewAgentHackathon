@@ -15,7 +15,7 @@ export type PracticeCategory =
 
 export type CyclePhase = 'menstrual' | 'follicular' | 'ovulatory' | 'luteal';
 
-export type InterventionType = 'standard' | 'interactive_goal' | 'interactive_nutrition' | 'interactive_movement';
+export type InterventionType = 'standard' | 'interactive_goal' | 'interactive_nutrition' | 'interactive_movement' | 'interactive_breathwork';
 
 export interface InterventionCard {
   id: string;

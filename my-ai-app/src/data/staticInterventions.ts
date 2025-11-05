@@ -49,7 +49,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Hold empty lungs for 4 counts',
         'Repeat for 3 minutes'
       ],
-      research: 'Joshi & Telles, 2009'
+      research: 'Joshi & Telles, 2009',
+      interaction_type: 'interactive_breathwork'
     },
     {
       phase_tags: ['menstrual'],
@@ -240,7 +241,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Hold empty lungs for 4 counts',
         'Repeat for 3 minutes'
       ],
-      research: 'Controlled breathing activates parasympathetic response, reducing cortisol (Joshi & Telles, 2009)'
+      research: 'Controlled breathing activates parasympathetic response, reducing cortisol (Joshi & Telles, 2009)',
+      interaction_type: 'interactive_breathwork'
     }
   ]
 };

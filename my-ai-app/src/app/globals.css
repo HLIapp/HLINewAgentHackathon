@@ -71,3 +71,21 @@ button, input, select, textarea {
 .hover\:shadow-md:hover {
   box-shadow: none !important;
 }
+
+/* Breathing circle animation */
+@keyframes breathe {
+  0% { transform: scale(1); } /* Start: empty lungs */
+  25% { transform: scale(1.4); } /* End inhale: full lungs */
+  50% { transform: scale(1.4); } /* Hold: full lungs */
+  75% { transform: scale(1); } /* End exhale: empty lungs */
+  100% { transform: scale(1); } /* Hold: empty lungs */
+}
+
+.breathing-circle {
+  animation: breathe 16s ease-in-out infinite;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E9D5FF 0%, #A78BFA 100%);
+  animation-play-state: running;
+}

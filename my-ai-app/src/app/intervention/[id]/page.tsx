@@ -11,6 +11,7 @@ import HIITCircuitInteractive from '@/components/HIITCircuitInteractive';
 import ProteinBreakfastInteractive from '@/components/ProteinBreakfastInteractive';
 import PowerWalkInteractive from '@/components/PowerWalkInteractive';
 import ReflectiveJournalingInteractive from '@/components/ReflectiveJournalingInteractive';
+import BoxBreathingInteractive from '@/components/BoxBreathingInteractive';
 
 type GuideMode = 'text' | 'audio' | 'visual';
 
@@ -623,6 +624,11 @@ export default function InterventionDetailPage() {
   // Render interactive component for Power Walk
   if (intervention.interaction_type === 'interactive_movement') {
     return <PowerWalkInteractive intervention={intervention} />;
+  }
+
+  // Render interactive component for Box Breathing
+  if (intervention.interaction_type === 'interactive_breathwork' && intervention.title === 'Box Breathing') {
+    return <BoxBreathingInteractive intervention={intervention} />;
   }
 
   return (
