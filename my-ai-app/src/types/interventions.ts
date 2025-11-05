@@ -192,3 +192,36 @@ export interface HIITWorkout {
   rest_duration: number; // seconds between exercises
   total_duration: number; // calculated total time
 }
+
+export interface SuccessReviewPrompt {
+  id: string;
+  question: string;
+  emoji: string;
+  category: string;
+}
+
+export interface UserWin {
+  prompt_id: string;
+  win_text: string;
+  timestamp: string;
+}
+
+export interface AmplifiedWin {
+  original_win: string;
+  amplified_statement: string;
+  growth_insight: string;
+  impact_reflection: string;
+  shareable_quote: string;
+  encouragement: string;
+}
+
+export interface SuccessReviewRequest {
+  win_text: string;
+  prompt_id?: string;
+  intervention_title: string;
+}
+
+export interface SuccessReviewResponse {
+  amplified_win: AmplifiedWin;
+  generated_at: string;
+}

@@ -181,7 +181,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Acknowledge your role in each',
         'Share one win with someone you trust'
       ],
-      research: 'Positive mood and self-perception peak at ovulation (Maki et al., 2002)'
+      research: 'Positive mood and self-perception peak at ovulation (Maki et al., 2002)',
+      interaction_type: 'interactive_goal'
     }
   ],
   

@@ -161,7 +161,7 @@ export default function GoalPlanningInteractive({ intervention }: GoalPlanningIn
       completed_full_practice: true,
     });
 
-    router.push('/');
+    router.back();
   };
 
   const getPhaseColor = (phase: string) => {
@@ -174,12 +174,48 @@ export default function GoalPlanningInteractive({ intervention }: GoalPlanningIn
     return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
+  const getPhaseGuidance = (phase: string, category: string) => {
+    const guidance: Record<string, Record<string, { title: string; description: string; tips: string[] }>> = {
+      follicular: {
+        mindset: {
+          title: 'Why This Matters',
+          description: 'During your follicular phase, your cognitive function and optimism peak. This is the perfect time to harness that clarity.',
+          tips: [
+            'Your brain is at its most capable right now',
+            'This is a great time to set intentions',
+            'Trust your instincts—they\'re sharper during this phase'
+          ]
+        }
+      },
+      ovulatory: {
+        mindset: {
+          title: 'Why This Matters',
+          description: 'During ovulation, your communication skills and confidence peak. Use this energy to express yourself authentically.',
+          tips: [
+            'Your words carry more weight when you\'re clear',
+            'This is a powerful time for setting boundaries',
+            'Trust your voice—it\'s strongest right now'
+          ]
+        }
+      }
+    };
+    return guidance[phase]?.[category] || {
+      title: 'Why This Matters',
+      description: 'Setting clear, achievable goals helps you make progress and feel accomplished.',
+      tips: [
+        'Break goals into actionable steps',
+        'Focus on what you can control',
+        'Celebrate small wins along the way'
+      ]
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back Button */}
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.back()}
           className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
         >
           ← Back
@@ -213,30 +249,50 @@ export default function GoalPlanningInteractive({ intervention }: GoalPlanningIn
             </div>
           </div>
 
-          <p className="text-sm text-gray-900 leading-relaxed mb-3 font-medium">
+          <p className="text-sm text-gray-900 leading-relaxed mb-4 font-medium">
             {intervention.description}
           </p>
 
-          {/* Guidance Section */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <h3 className="text-sm font-semibold text-blue-900 mb-2">Why This Matters</h3>
-            <p className="text-xs text-blue-800 leading-relaxed mb-3">
-              During your follicular phase, your cognitive function and optimism are at their peak. This is the perfect time to harness that clarity and set intentions that feel achievable and meaningful.
-            </p>
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-blue-900">✨ Think about:</p>
-              <ul className="text-xs text-blue-800 space-y-1 ml-4 list-disc">
-                <li>What would make you feel more energized or balanced this week?</li>
-                <li>What's one thing you've been wanting to prioritize?</li>
-                <li>What would feel like a meaningful step forward?</li>
-              </ul>
+          {/* Phase-Specific Guidance */}
+          {intervention.phase_tags[0] && (
+            <div className={`rounded-lg border p-4 mb-4 ${getPhaseColor(intervention.phase_tags[0])}`}>
+              {(() => {
+                const guidance = getPhaseGuidance(intervention.phase_tags[0], intervention.category);
+                return (
+                  <>
+                    <h3 className="text-xs font-semibold mb-2">{guidance.title}</h3>
+                    <p className="text-xs leading-relaxed mb-3">
+                      {guidance.description}
+                    </p>
+                    <div className="space-y-1">
+                      {guidance.tips.map((tip: string, index: number) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <span className="text-xs mt-0.5">•</span>
+                          <p className="text-xs leading-relaxed">{tip}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
-          </div>
+          )}
 
-          {/* Example Goals */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-            <h3 className="text-xs font-semibold text-gray-900 mb-2">Example Goals</h3>
-            <div className="space-y-2">
+          {/* Research Citation */}
+          <p className="text-xs text-gray-500">
+            <a 
+              href="#research" 
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {intervention.research}
+            </a>
+          </p>
+        </div>
+
+        {/* Example Goals */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+          <h3 className="text-xs font-semibold text-gray-900 mb-2">Example Goals</h3>
+          <div className="space-y-2">
               <button
                 onClick={() => setGoalText("I want to establish a morning routine that energizes me for the day")}
                 className="text-xs text-gray-700 text-left block w-full hover:text-gray-900 transition-colors"
@@ -266,13 +322,6 @@ export default function GoalPlanningInteractive({ intervention }: GoalPlanningIn
               Click any example to use it, or write your own!
             </p>
           </div>
-
-          <p className="text-xs text-gray-500">
-            <a href="#research" className="text-gray-600 hover:text-gray-900 transition-colors">
-              {intervention.research}
-            </a>
-          </p>
-        </div>
 
         {/* Input Mode Selector */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">

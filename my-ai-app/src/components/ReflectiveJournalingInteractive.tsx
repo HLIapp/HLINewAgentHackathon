@@ -174,7 +174,7 @@ export default function ReflectiveJournalingInteractive({ intervention }: Reflec
       completed_full_practice: true,
     });
 
-    router.push('/');
+    router.back();
   };
 
   const getPhaseColor = (phase: string) => {
@@ -185,6 +185,31 @@ export default function ReflectiveJournalingInteractive({ intervention }: Reflec
       luteal: 'bg-purple-50 text-purple-700 border-purple-200',
     };
     return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
+
+  const getPhaseGuidance = (phase: string, category: string) => {
+    const guidance: Record<string, Record<string, { title: string; description: string; tips: string[] }>> = {
+      luteal: {
+        reflection: {
+          title: 'Why This Matters',
+          description: 'During your luteal phase, emotions can feel more intense and sensitive. Reflective journaling helps you process these feelings and gain clarity.',
+          tips: [
+            'Distinguish between temporary phase-related emotions and persistent concerns',
+            'Processing feelings helps you understand what needs attention',
+            'Journaling supports your emotional wellbeing during this phase'
+          ]
+        }
+      }
+    };
+    return guidance[phase]?.[category] || {
+      title: 'Why This Matters',
+      description: 'Reflective journaling helps you process feelings, identify patterns, and gain clarity about what needs attention.',
+      tips: [
+        'Writing helps process emotions',
+        'Regular reflection supports emotional wellbeing',
+        'Patterns become clearer when documented'
+      ]
+    };
   };
 
   const getRecommendationColor = (recommendation: string) => {
@@ -198,7 +223,7 @@ export default function ReflectiveJournalingInteractive({ intervention }: Reflec
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back Button */}
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.back()}
           className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
         >
           ← Back
@@ -232,25 +257,46 @@ export default function ReflectiveJournalingInteractive({ intervention }: Reflec
             </div>
           </div>
 
-          <p className="text-sm text-gray-900 leading-relaxed mb-3 font-medium">
+          {/* Description */}
+          <p className="text-sm text-gray-900 leading-relaxed mb-4 font-medium">
             {intervention.description}
           </p>
 
-          {/* Guidance Section */}
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-            <h3 className="text-sm font-semibold text-purple-900 mb-2">Why This Matters</h3>
-            <p className="text-xs text-purple-800 leading-relaxed mb-3">
-              During your luteal phase, emotions can feel more intense and sensitive. Reflective journaling helps you process these feelings, distinguish between temporary phase-related emotions and persistent concerns, and gain clarity about what needs attention.
-            </p>
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-purple-900">✨ What to explore:</p>
-              <ul className="text-xs text-purple-800 space-y-1 ml-4 list-disc">
-                <li>What's triggering you today?</li>
-                <li>What patterns do you notice in your emotions?</li>
-                <li>What feels temporary vs. what needs attention?</li>
-              </ul>
+          {/* Phase-Specific Guidance */}
+          {intervention.phase_tags[0] && (
+            <div className={`rounded-lg border p-4 mb-4 ${getPhaseColor(intervention.phase_tags[0])}`}>
+              {(() => {
+                const guidance = getPhaseGuidance(intervention.phase_tags[0], intervention.category);
+                return (
+                  <>
+                    <h3 className="text-xs font-semibold mb-2">{guidance.title}</h3>
+                    <p className="text-xs leading-relaxed mb-3">
+                      {guidance.description}
+                    </p>
+                    <div className="space-y-1">
+                      {guidance.tips.map((tip: string, index: number) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <span className="text-xs mt-0.5">•</span>
+                          <p className="text-xs leading-relaxed">{tip}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
-          </div>
+          )}
+
+          {/* Research Citation */}
+          <p className="text-xs text-gray-500">
+            <a 
+              href="#research" 
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {intervention.research}
+            </a>
+          </p>
+        </div>
 
           {/* Example Prompts */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
@@ -570,7 +616,6 @@ export default function ReflectiveJournalingInteractive({ intervention }: Reflec
           </div>
         )}
       </div>
-    </div>
   );
 }
 

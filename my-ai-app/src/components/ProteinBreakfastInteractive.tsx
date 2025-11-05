@@ -204,7 +204,42 @@ export default function ProteinBreakfastInteractive({ intervention }: ProteinBre
   };
 
   const handleDone = () => {
-    router.push('/');
+    router.back();
+  };
+
+  const getPhaseColor = (phase: string) => {
+    const colors = {
+      menstrual: 'bg-red-50 text-red-700 border-red-200',
+      follicular: 'bg-green-50 text-green-700 border-green-200',
+      ovulatory: 'bg-blue-50 text-blue-700 border-blue-200',
+      luteal: 'bg-purple-50 text-purple-700 border-purple-200',
+    };
+    return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
+
+  const getPhaseGuidance = (phase: string, category: string) => {
+    const guidance: Record<string, Record<string, { title: string; description: string; tips: string[] }>> = {
+      follicular: {
+        nutrition: {
+          title: 'Why This Matters',
+          description: 'Your follicular phase is when your body is building. Nourishing yourself well now supports your entire cycle.',
+          tips: [
+            'Food is fuel and medicine for your body',
+            'Every meal is an opportunity to support your wellbeing',
+            'Simple, consistent choices make a big difference'
+          ]
+        }
+      }
+    };
+    return guidance[phase]?.[category] || {
+      title: 'Why This Matters',
+      description: 'Protein intake supports hormone synthesis, tissue building, and sustained energy throughout your cycle.',
+      tips: [
+        'A protein-rich breakfast helps stabilize blood sugar',
+        'Protein provides building blocks your body needs',
+        'Consistent nutrition supports your hormonal health'
+      ]
+    };
   };
 
   return (
@@ -219,19 +254,71 @@ export default function ProteinBreakfastInteractive({ intervention }: ProteinBre
         </button>
 
         {/* Intervention Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-3xl">{intervention.emoji}</span>
-            <h1 className="text-2xl font-bold text-gray-900">{intervention.title}</h1>
+        <div className="bg-white border border-gray-200 rounded-lg p-8 mb-6">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="text-4xl">{intervention.emoji}</div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                {intervention.phase_tags.map((phase) => (
+                  <span
+                    key={phase}
+                    className={`text-xs font-medium px-2 py-0.5 rounded border capitalize ${getPhaseColor(phase)}`}
+                  >
+                    {phase}
+                  </span>
+                ))}
+              </div>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">
+                {intervention.title}
+              </h1>
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                <span>{intervention.duration_minutes} min</span>
+                <span>·</span>
+                <span className="capitalize">{intervention.category}</span>
+                <span>·</span>
+                <span>{intervention.location}</span>
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-gray-600">{intervention.description}</p>
-        </div>
 
-        {/* Guidance Section */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">Why This Matters</h3>
-          <p className="text-xs text-blue-800 leading-relaxed">
-            During your {currentPhase} phase, protein intake supports hormone synthesis, tissue building, and sustained energy. A protein-rich breakfast (20g+) helps stabilize blood sugar and provides the building blocks your body needs during this phase.
+          {/* Description */}
+          <p className="text-sm text-gray-900 leading-relaxed mb-4 font-medium">
+            {intervention.description}
+          </p>
+
+          {/* Phase-Specific Guidance */}
+          {intervention.phase_tags[0] && (
+            <div className={`rounded-lg border p-4 mb-4 ${getPhaseColor(intervention.phase_tags[0])}`}>
+              {(() => {
+                const guidance = getPhaseGuidance(intervention.phase_tags[0], intervention.category);
+                return (
+                  <>
+                    <h3 className="text-xs font-semibold mb-2">{guidance.title}</h3>
+                    <p className="text-xs leading-relaxed mb-3">
+                      {guidance.description}
+                    </p>
+                    <div className="space-y-1">
+                      {guidance.tips.map((tip: string, index: number) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <span className="text-xs mt-0.5">•</span>
+                          <p className="text-xs leading-relaxed">{tip}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Research Citation */}
+          <p className="text-xs text-gray-500">
+            <a 
+              href="#research" 
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {intervention.research}
+            </a>
           </p>
         </div>
 

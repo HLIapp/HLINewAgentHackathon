@@ -96,7 +96,7 @@ export default function HIITCircuitInteractive({ intervention }: HIITCircuitInte
     }
 
     return () => {
-      if (audioRef.current && workoutPhase === 'completed') {
+      if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
@@ -259,7 +259,7 @@ export default function HIITCircuitInteractive({ intervention }: HIITCircuitInte
       completed_full_practice: true,
     });
 
-    router.push('/');
+    router.back();
   };
 
   const getPhaseColor = (phase: string) => {
@@ -272,6 +272,42 @@ export default function HIITCircuitInteractive({ intervention }: HIITCircuitInte
     return colors[phase as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
+  const getPhaseGuidance = (phase: string, category: string) => {
+    const guidance: Record<string, Record<string, { title: string; description: string; tips: string[] }>> = {
+      ovulatory: {
+        movement: {
+          title: 'Why This Matters',
+          description: 'During ovulation, your body reaches peak performance. This is your window to challenge yourself and feel your strength.',
+          tips: [
+            'Your coordination and reaction time are at their peak',
+            'This is a great time to try something new',
+            'Your body is showing you what it\'s capable of'
+          ]
+        }
+      },
+      follicular: {
+        movement: {
+          title: 'Why This Matters',
+          description: 'During your follicular phase, rising estrogen gives you more energy and strength. This is the perfect time to build momentum.',
+          tips: [
+            'Your body is primed for building strength right now',
+            'Start where you are—every movement counts',
+            'This phase supports your body\'s natural capacity for growth'
+          ]
+        }
+      }
+    };
+    return guidance[phase]?.[category] || {
+      title: 'Why This Matters',
+      description: 'High-intensity interval training builds strength and endurance while maximizing your body\'s performance potential.',
+      tips: [
+        'Listen to your body and adjust intensity as needed',
+        'Consistency matters more than perfection',
+        'Every workout builds your capacity'
+      ]
+    };
+  };
+
   // Exercise Selection Screen
   if (workoutPhase === 'selection') {
     return (
@@ -279,7 +315,7 @@ export default function HIITCircuitInteractive({ intervention }: HIITCircuitInte
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           {/* Back Button */}
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.back()}
             className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
           >
             ← Back
@@ -303,8 +339,50 @@ export default function HIITCircuitInteractive({ intervention }: HIITCircuitInte
                 <h1 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">
                   {intervention.title}
                 </h1>
+                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+                  <span>{intervention.duration_minutes} min</span>
+                  <span>·</span>
+                  <span className="capitalize">{intervention.category}</span>
+                  <span>·</span>
+                  <span>{intervention.location}</span>
+                </div>
                 <p className="text-sm text-gray-600 leading-relaxed mb-4">
                   {intervention.description}
+                </p>
+
+                {/* Phase-Specific Guidance */}
+                {intervention.phase_tags[0] && (
+                  <div className={`rounded-lg border p-4 mb-4 ${getPhaseColor(intervention.phase_tags[0])}`}>
+                    {(() => {
+                      const guidance = getPhaseGuidance(intervention.phase_tags[0], intervention.category);
+                      return (
+                        <>
+                          <h3 className="text-xs font-semibold mb-2">{guidance.title}</h3>
+                          <p className="text-xs leading-relaxed mb-3">
+                            {guidance.description}
+                          </p>
+                          <div className="space-y-1">
+                            {guidance.tips.map((tip: string, index: number) => (
+                              <div key={index} className="flex items-start gap-2">
+                                <span className="text-xs mt-0.5">•</span>
+                                <p className="text-xs leading-relaxed">{tip}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Research Citation */}
+                <p className="text-xs text-gray-500">
+                  <a 
+                    href="#research" 
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    {intervention.research}
+                  </a>
                 </p>
               </div>
             </div>

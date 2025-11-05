@@ -6,6 +6,7 @@ import { getInterventionByTitle, getAllStaticInterventions, StaticIntervention }
 import { addCompletedIntervention, isInterventionCompletedToday, CompletedIntervention } from '@/utils/userStorage';
 import GoalPlanningInteractive from '@/components/GoalPlanningInteractive';
 import VoiceYourNeedsInteractive from '@/components/VoiceYourNeedsInteractive';
+import SuccessReviewInteractive from '@/components/SuccessReviewInteractive';
 import HIITCircuitInteractive from '@/components/HIITCircuitInteractive';
 import ProteinBreakfastInteractive from '@/components/ProteinBreakfastInteractive';
 import PowerWalkInteractive from '@/components/PowerWalkInteractive';
@@ -214,7 +215,7 @@ export default function InterventionDetailPage() {
       addCompletedIntervention(completion);
       setIsCompleted(true);
       setShowReflectionModal(false);
-      router.push('/');
+      router.back();
     }
   };
 
@@ -265,7 +266,7 @@ export default function InterventionDetailPage() {
 
     setIsCompleted(true);
     setShowReflectionModal(false);
-    router.push('/');
+    router.back();
   };
 
   const toggleChangeTag = (tag: string) => {
@@ -579,10 +580,10 @@ export default function InterventionDetailPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-3">Practice Not Found</h2>
           <p className="text-sm text-gray-600 mb-6">We couldn't find this practice.</p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.back()}
             className="text-sm font-medium text-gray-900 border border-gray-300 px-4 py-2 rounded-md hover:border-gray-400 transition-colors"
           >
-            Back to Home
+            Go Back
           </button>
         </div>
       </div>
@@ -602,6 +603,11 @@ export default function InterventionDetailPage() {
   // Render interactive component for Voice Your Needs
   if (intervention.interaction_type === 'interactive_goal' && intervention.title === 'Voice Your Needs') {
     return <VoiceYourNeedsInteractive intervention={intervention} />;
+  }
+
+  // Render interactive component for Success Review
+  if (intervention.interaction_type === 'interactive_goal' && intervention.title === 'Success Review') {
+    return <SuccessReviewInteractive intervention={intervention} />;
   }
 
   // Render interactive component for Reflective Journaling
@@ -624,7 +630,7 @@ export default function InterventionDetailPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back Button */}
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.back()}
           className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
         >
           ← Back
