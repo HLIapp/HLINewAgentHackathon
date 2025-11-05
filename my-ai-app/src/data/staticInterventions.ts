@@ -68,7 +68,8 @@ export const staticInterventions: Record<CyclePhase, StaticIntervention[]> = {
         'Breathe deeply and relax muscles',
         'Leave on for 5 minutes minimum'
       ],
-      research: 'Heat at 40°C as effective as NSAIDs for menstrual pain (Akin et al., 2001)'
+      research: 'Heat at 40°C as effective as NSAIDs for menstrual pain (Akin et al., 2001)',
+      interaction_type: 'interactive_supplementation'
     }
   ],
   

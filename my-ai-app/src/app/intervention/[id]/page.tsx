@@ -12,6 +12,7 @@ import ProteinBreakfastInteractive from '@/components/ProteinBreakfastInteractiv
 import PowerWalkInteractive from '@/components/PowerWalkInteractive';
 import ReflectiveJournalingInteractive from '@/components/ReflectiveJournalingInteractive';
 import BoxBreathingInteractive from '@/components/BoxBreathingInteractive';
+import HeatTherapyInteractive from '@/components/HeatTherapyInteractive';
 
 type GuideMode = 'text' | 'audio' | 'visual';
 
@@ -629,6 +630,11 @@ export default function InterventionDetailPage() {
   // Render interactive component for Box Breathing
   if (intervention.interaction_type === 'interactive_breathwork' && intervention.title === 'Box Breathing') {
     return <BoxBreathingInteractive intervention={intervention} />;
+  }
+
+  // Render interactive component for Heat Therapy
+  if (intervention.interaction_type === 'interactive_supplementation' && intervention.title === 'Heat Therapy') {
+    return <HeatTherapyInteractive intervention={intervention} />;
   }
 
   return (
