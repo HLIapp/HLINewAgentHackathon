@@ -268,7 +268,7 @@ export default function SuccessReviewInteractive({ intervention }: SuccessReview
       completed_full_practice: true,
     });
 
-    router.push('/');
+    router.back();
   };
 
   // Prompt Selection Screen
